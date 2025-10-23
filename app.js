@@ -1,11 +1,11 @@
 // Configuration - IMPORTANT: Update these values with your GitHub repository details
 const GITHUB_CONFIG = {
-    username: 'saumenray-afk',
+    username: 'arundhatigr-ds',
     repo: 'water_tool',
     branch: 'main',
     dataFile: 'DENSE_CONTINUOUS_POI_150KM_20251010_225505.zip'
 };
-
+    
 // Construct the GitHub raw URL
 const POI_ZIP_URL = `https://raw.githubusercontent.com/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${GITHUB_CONFIG.dataFile}`;
 
@@ -13,7 +13,7 @@ const POI_ZIP_URL = `https://raw.githubusercontent.com/${GITHUB_CONFIG.username}
 const VALID_USERS = {
     'admin': 'admin2024!',
     'manager': 'manager123',
-    'soumen': 'soumen123',
+    'arundhati': 'arundhati123',
     'client': 'client123',
     'test': 'test2024!'
 };
