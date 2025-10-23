@@ -414,6 +414,22 @@ const distributorsData = [
         segment: ''
     }
 ];
+function populateCityFilter() {
+    const cities = new Set();
+    distributorsData.forEach(d => {
+        if (d.city) cities.add(d.city);
+    });
+    
+    const cityFilter = document.getElementById('cityFilter');
+    cityFilter.innerHTML = '<option value="all">All Cities</option>';
+    
+    Array.from(cities).sort().forEach(city => {
+        const option = document.createElement('option');
+        option.value = city;
+        option.textContent = city;
+        cityFilter.appendChild(option);
+    });
+}
 // Plant locations
 const plants = {
     plant1: {name: 'Bangalore Plant (Main)', lat: 12.996663, lng: 76.982185},
@@ -1052,6 +1068,7 @@ function initializeApp() {
     populateDistributorDropdown();
     updateMap();
     loadPOIData();
+    populateCityFilter(); // ← ADD THIS LINE
 
     // Update total distributors count in UI
     document.getElementById('totalDist').textContent = distributors.length;
