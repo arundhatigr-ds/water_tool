@@ -933,7 +933,36 @@ async function parsePOIData(csvText, fileName) {
             // Map Ramanagara CSV columns to expected field names
             poi.Business_Name = poi.name || poi.Business_Name || 'Unknown Business';
             poi.POI_ID = poi.business_id || poi.place_id || poi.POI_ID || `POI_${validCount}`;
-            poi.Category = poi.business_category || poi.Category || 'Retail';
+            
+            // Categorize based on Google channel/business_category
+            const channel = (poi.channel || '').toLowerCase();
+            const businessCat = (poi.business_category || '').toLowerCase();
+            
+            // Determine main category based on channel type
+            if (channel.includes('store') || channel.includes('supermarket') || channel.includes('shopping') || 
+                channel.includes('convenience') || channel.includes('mall') || channel.includes('liquor') ||
+                channel.includes('electronics') || channel.includes('clothing') || channel.includes('pharmacy') ||
+                channel.includes('bakery') || channel.includes('book') || channel.includes('hardware') ||
+                businessCat.includes('retail')) {
+                poi.Category = 'Retail';
+            } else if (channel.includes('restaurant') || channel.includes('cafe') || channel.includes('bar') || 
+                       channel.includes('hotel') || channel.includes('lodging') || channel.includes('meal') ||
+                       channel.includes('food') || businessCat.includes('horeca')) {
+                poi.Category = 'HoReCa';
+            } else if (channel.includes('salon') || channel.includes('spa') || channel.includes('gym') || 
+                       channel.includes('car_wash') || channel.includes('laundry') || channel.includes('hair_care') ||
+                       businessCat.includes('service')) {
+                poi.Category = 'Services';
+            } else if (channel.includes('hospital') || channel.includes('school') || channel.includes('university') ||
+                       channel.includes('college') || channel.includes('clinic') || businessCat.includes('institutional')) {
+                poi.Category = 'Institutional';
+            } else if (channel.includes('movie') || channel.includes('theater') || channel.includes('amusement') ||
+                       channel.includes('stadium') || businessCat.includes('entertainment')) {
+                poi.Category = 'Entertainment';
+            } else {
+                poi.Category = poi.business_category || 'Retail';
+            }
+            
             poi.Sub_Category = poi.channel || poi.Sub_Category || 'general';
             poi.City = poi.address ? (poi.address.split(',')[1] || '').trim() : (poi.City || 'Karnataka');
             poi.Address = poi.address || poi.Address || '';
@@ -1397,14 +1426,14 @@ function exportCurrentViewPOIs() {
 
 function getMarkerColor(category) {
     const colors = {
-        'Distribution': '#4ECDC4',
-        'Retail': '#FFD93D',
-        'Food & Beverage': '#6BCB77',
-        'Hospitality': '#FF6B6B',
-        'Corporate': '#9D84B7',
-        'Healthcare': '#E74C3C'
+        'Retail': '#FFD93D',        // Yellow - stores, shops
+        'HoReCa': '#FF6B6B',        // Red - restaurants, hotels, cafes
+        'Services': '#6BCB77',      // Green - salons, car wash, gym
+        'Institutional': '#E74C3C', // Dark red - hospitals, schools
+        'Entertainment': '#9D84B7', // Purple - theaters, stadiums
+        'Distribution': '#4ECDC4'   // Teal - wholesalers (if any)
     };
-    return colors[category] || '#95A5A6';
+    return colors[category] || '#95A5A6'; // Gray for others
 }
 
 function filterDistributors() {
@@ -1816,11 +1845,18 @@ function handleCategoryCheck() {
         }
     });
     
-    // Show/hide Distribution subcategories
-    const subDiv = document.getElementById('distributionSubFilters');
-    if (subDiv) {
-        subDiv.style.display = selectedCats.has('Distribution') ? 'block' : 'none';
-    }
+    // Show/hide subcategory filters based on selected categories
+    const retailSub = document.getElementById('retailSubFilters');
+    const horecaSub = document.getElementById('horecaSubFilters');
+    const servicesSub = document.getElementById('servicesSubFilters');
+    
+    if (retailSub) retailSub.style.display = selectedCats.has('Retail') ? 'block' : 'none';
+    if (horecaSub) horecaSub.style.display = selectedCats.has('HoReCa') ? 'block' : 'none';
+    if (servicesSub) servicesSub.style.display = selectedCats.has('Services') ? 'block' : 'none';
+    
+    // Also hide old Distribution subcategories if exists
+    const distSub = document.getElementById('distributionSubFilters');
+    if (distSub) distSub.style.display = 'none';
     
     // Filter POIs
     if (selectedCats.size === 0) {
@@ -1832,4 +1868,4 @@ function handleCategoryCheck() {
     updateMap();
 }
 
-console.log('✅ Multiple category checkboxes ready');
+console.log('✅ Google categories ready: Retail, HoReCa, Services, Institutional, Entertainment');
