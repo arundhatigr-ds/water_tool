@@ -1310,27 +1310,12 @@ function updateMap() {
                 </div>
             `;
             
-            // Show tooltip on hover
+            // Show tooltip ONLY on hover
             marker.bindTooltip(tooltipContent, {
-                permanent: false,  // Set to true to show names always
+                permanent: false,  // Only show on hover
                 direction: 'top',
                 offset: [0, -5]
             });
-            
-            // Show name label for high-priority businesses
-            if (poi.Priority === 'High' || poi.Is_Wholesaler === 'Yes') {
-                const nameLabel = L.tooltip({
-                    permanent: true,
-                    direction: 'right',
-                    className: 'poi-name-label',
-                    offset: [8, 0]
-                })
-                .setContent(`<span style="font-size: 10px; font-weight: 600; color: #333; background: white; padding: 2px 6px; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">${poi.Business_Name}</span>`)
-                .setLatLng([poi.Latitude, poi.Longitude])
-                .addTo(map);
-                
-                mapMarkers.push(nameLabel);
-            }
             
             mapMarkers.push(marker);
         });
