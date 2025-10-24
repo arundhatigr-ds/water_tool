@@ -1,1585 +1,375 @@
-// Configuration - IMPORTANT: Update these values with your GitHub repository details
+// ============================================================
+// UPDATED PLANT LOCATIONS - RAMANAGARA & KUNIGAL
+// Replace the old plants section in your app.js with this
+// ============================================================
+
+// NEW: Two water plants - Ramanagara and Kunigal
+const plants = {
+    ramanagara: {
+        name: 'Ramanagara Plant',
+        lat: 12.7209,
+        lng: 77.2799,
+        radius: 40, // KM
+        region: 'Ramanagara-Kanakapura Region',
+        coverage: 'Ramanagara, Kanakapura, Channapatna, Bidadi, South Bangalore',
+        capacity: '50,000 L/day',
+        established: '2024',
+        status: 'Active',
+        color: '#667eea'
+    },
+    kunigal: {
+        name: 'Kunigal Plant',
+        lat: 12.996663,
+        lng: 76.982185,
+        radius: 40, // KM
+        region: 'Kunigal-Tumakuru Region',
+        coverage: 'Kunigal, Tumakuru, Huliyar, Koratagere, Madhugiri',
+        capacity: '50,000 L/day',
+        established: '2024',
+        status: 'Active',
+        color: '#764ba2'
+    }
+};
+
+// Plant selection for filtering
+let selectedPlant = 'all'; // 'all', 'ramanagara', or 'kunigal'
+
+// ============================================================
+// DATA FILE CONFIGURATION FOR NEW PLANTS
+// ============================================================
+
+// IMPORTANT: Update this with your new data file
+// You'll need to convert your Ramanagara_GOOGLE_ONLY.xlsx to CSV
+// and upload it to your GitHub repo
 const GITHUB_CONFIG = {
     username: 'arundhatigr-ds',
     repo: 'water_tool',
     branch: 'main',
-    dataFile: 'DENSE_CONTINUOUS_POI_150KM_20251010_225505.zip'
+    // UPDATE THIS: New data file with Ramanagara businesses
+    dataFile: 'Ramanagara_Businesses_27K.csv'  // Your 27,000 businesses from Google
 };
-    
+
 // Construct the GitHub raw URL
-const POI_ZIP_URL = `https://raw.githubusercontent.com/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${GITHUB_CONFIG.dataFile}`;
+const POI_CSV_URL = `https://raw.githubusercontent.com/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${GITHUB_CONFIG.dataFile}`;
 
-// User authentication
-const VALID_USERS = {
-    'admin': 'admin2024!',
-    'manager': 'manager123',
-    'arundhati': 'arundhati123',
-    'client': 'client123',
-    'test': 'test2024!'
-};
+// ============================================================
+// FIELD MAPPING FOR YOUR NEW DATA STRUCTURE
+// ============================================================
 
-const SESSION_TIMEOUT = 120; // minutes
+// Your Ramanagara data has these fields:
+// source, business_id, place_id, name, channel, business_category,
+// latitude, longitude, address, distance_from_plant_km, nearest_plant,
+// plant_region, rating, user_ratings_total, price_level, business_status,
+// estimated_monthly_water_liters, estimated_monthly_water_revenue,
+// priority_score, water_priority, is_wholesaler, is_chain
 
-// Actual distributor data from your CSV file
-// UPDATED DISTRIBUTOR DATA - Replace lines 23-71 in app.js with this section
-
-// Actual distributor data from your CSV file
-// COMPLETE UPDATED DISTRIBUTOR DATA WITH SALES FIGURES
-// Replace lines 23-71 in app.js with this entire section
-
-// Actual distributor data from your CSV file
-const distributorsData = [
-    {
-        name: 'ADHITHYA EDIFICE CONCEPTZ(NEW)', 
-        city: 'Bangalore', 
-        retailers: 195, 
-        lat: 12.9386, 
-        lng: 77.5441, 
-        target: 1000000, // Oct25 Target
-        sales: 115715, // Oct25 Sales
-        tsm: 'Sunil Kumar DN', 
-        asm: 'Suresh Be', 
-        bdm: 'Shivakumar HC', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: 'GT'
-    },
-    {
-        name: 'ADHITHYA ESSENTIALS', 
-        city: 'Bangalore', 
-        retailers: 155, 
-        lat: 12.9616, 
-        lng: 77.5385, 
-        target: 0, 
-        sales: 0, 
-        tsm: 'Vacant', 
-        asm: 'Suresh Be', 
-        bdm: 'Shivakumar HC', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: 'GT'
-    },
-    {
-        name: 'B P AGENCY', 
-        city: 'Bengaluru', 
-        retailers: 55, 
-        lat: 12.9702, 
-        lng: 77.5619, 
-        target: 0, 
-        sales: 0, 
-        tsm: 'Sunil Kumar DN', 
-        asm: 'Suresh Be', 
-        bdm: 'Shivakumar HC', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: 'GT'
-    },
-    {
-        name: 'BHARATH CARE (BANGALORE)', 
-        city: 'Bengaluru', 
-        retailers: 19, 
-        lat: 13.0116, 
-        lng: 77.7263, 
-        target: 0, 
-        sales: 0, 
-        tsm: 'Rajshekhar J', 
-        asm: 'Suresh Be', 
-        bdm: 'Vacant', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: ''
-    },
-    {
-        name: 'BHASKAR-GOWRIBIDNUR', 
-        city: 'Tumkur', 
-        retailers: 38, 
-        lat: 13.522, 
-        lng: 77.2373, 
-        target: 160000, 
-        sales: 167100, 
-        tsm: 'G R Harish', 
-        asm: 'Suresh Be', 
-        bdm: 'Srikanth BN', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: ''
-    },
-    {
-        name: 'DINESH KUMAR (BENGALURU)', 
-        city: 'Bengaluru', 
-        retailers: 21, 
-        lat: 12.7981, 
-        lng: 77.6846, 
-        target: 0, 
-        sales: 0, 
-        tsm: 'Vacant', 
-        asm: 'Suresh Be', 
-        bdm: 'Shivakumar HC', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: ''
-    },
-    {
-        name: 'ETERNAL TRADERS', 
-        city: 'Bangalore', 
-        retailers: 149, 
-        lat: 13.0214, 
-        lng: 77.6585, 
-        target: 0, 
-        sales: 259238, 
-        tsm: 'K Mahendra Maiya', 
-        asm: 'Tejas Manjunath', 
-        bdm: 'Vacant', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: 'Horeca'
-    },
-    {
-        name: 'G S Enterprises(Bengaluru) NEW', 
-        city: 'Bengaluru', 
-        retailers: 216, 
-        lat: 13.1391, 
-        lng: 77.4876, 
-        target: 0, 
-        sales: 94143, 
-        tsm: 'Yatheesh N', 
-        asm: 'Suresh Be', 
-        bdm: 'Srikanth BN', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: ''
-    },
-    {
-        name: 'GARUDA ENTERPRISES', 
-        city: 'Bangalore', 
-        retailers: 156, 
-        lat: 12.926, 
-        lng: 77.5293, 
-        target: 0, 
-        sales: 0, 
-        tsm: 'Vinod Kumar KJ', 
-        asm: 'Suresh Be', 
-        bdm: 'Shivakumar HC', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: 'GT'
-    },
-    {
-        name: 'HANVIK CREATIONS', 
-        city: 'Bangalore', 
-        retailers: 38, 
-        lat: 12.9917, 
-        lng: 77.5073, 
-        target: 0, 
-        sales: 0, 
-        tsm: 'Vacant', 
-        asm: 'Suresh Be', 
-        bdm: 'Shivakumar HC', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: 'GT'
-    },
-    {
-        name: 'K B C DISTRIBUTORS', 
-        city: 'Bengaluru', 
-        retailers: 269, 
-        lat: 12.8452, 
-        lng: 77.6604, 
-        target: 0, 
-        sales: 0, 
-        tsm: 'Vacant', 
-        asm: 'Suresh Be', 
-        bdm: 'Shivakumar HC', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: 'GT'
-    },
-    {
-        name: 'P G C (BANGLORE)', 
-        city: 'Bengaluru', 
-        retailers: 59, 
-        lat: 12.9732, 
-        lng: 77.5286, 
-        target: 0, 
-        sales: 0, 
-        tsm: 'Vinod Kumar KJ', 
-        asm: 'Suresh Be', 
-        bdm: 'Shivakumar HC', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: ''
-    },
-    {
-        name: 'S L V enterprises (Bengaluru)', 
-        city: 'Bengaluru', 
-        retailers: 22, 
-        lat: 12.9181, 
-        lng: 77.5442, 
-        target: 0, 
-        sales: 0, 
-        tsm: 'Praveen Kumar S N', 
-        asm: 'Suresh Be', 
-        bdm: 'Shivakumar HC', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: ''
-    },
-    {
-        name: 'S S AGENCIES (BANGALORE)', 
-        city: 'Varthur', 
-        retailers: 188, 
-        lat: 13.0056, 
-        lng: 77.4982, 
-        target: 0, 
-        sales: 0, 
-        tsm: 'Babu Reddy C S', 
-        asm: 'Suresh Be', 
-        bdm: 'Vacant', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: 'GT'
-    },
-    {
-        name: 'SLN Enterprises', 
-        city: 'Chikkaballapur', 
-        retailers: 51, 
-        lat: 13.4356, 
-        lng: 77.7311, 
-        target: 0, 
-        sales: 0, 
-        tsm: 'G R Harish', 
-        asm: 'Suresh Be', 
-        bdm: 'Srikanth BN', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: 'GT'
-    },
-    {
-        name: 'SBM Enterprises', 
-        city: 'Bengaluru', 
-        retailers: 190, 
-        lat: 12.8001, 
-        lng: 77.6092, 
-        target: 0, 
-        sales: 0, 
-        tsm: 'Vacant', 
-        asm: 'Suresh Be', 
-        bdm: 'Shivakumar HC', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: 'GT'
-    },
-    {
-        name: 'Shashank Enterprises', 
-        city: 'Bengaluru', 
-        retailers: 134, 
-        lat: 12.8826, 
-        lng: 77.6412, 
-        target: 500000, 
-        sales: 587684, 
-        tsm: 'Vacant', 
-        asm: 'Suresh Be', 
-        bdm: 'Vacant', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: ''
-    },
-    {
-        name: 'SLN ENTERPRISES', 
-        city: 'Chikkaballapur', 
-        retailers: 37, 
-        lat: 13.4356, 
-        lng: 77.7311, 
-        target: 0, 
-        sales: 78952, 
-        tsm: 'G R Harish', 
-        asm: 'Suresh Be', 
-        bdm: 'Srikanth BN', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: ''
-    },
-    {
-        name: 'SM ELIXIR', 
-        city: 'Bengaluru', 
-        retailers: 4, 
-        lat: 12.9352, 
-        lng: 77.5838, 
-        target: 0, 
-        sales: 0, 
-        tsm: 'Vacant', 
-        asm: 'Suresh Be', 
-        bdm: 'Shivakumar HC', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: ''
-    },
-    {
-        name: 'SM INFRA ELECTRADE', 
-        city: 'Bangalore', 
-        retailers: 6, 
-        lat: 12.9352, 
-        lng: 77.5838, 
-        target: 0, 
-        sales: 0, 
-        tsm: 'Vacant', 
-        asm: 'Suresh Be', 
-        bdm: 'Shivakumar HC', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: ''
-    },
-    {
-        name: 'SRI MANJUNATHA ENTERPRISES', 
-        city: 'Tumkur', 
-        retailers: 22, 
-        lat: 13.3409, 
-        lng: 77.101, 
-        target: 0, 
-        sales: 0, 
-        tsm: 'Nagaraj P', 
-        asm: 'Suresh Be', 
-        bdm: 'Vacant', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: 'GT'
-    },
-    {
-        name: 'VIVAN WORLD WIDES', 
-        city: 'Bengaluru', 
-        retailers: 123, 
-        lat: 13.0285, 
-        lng: 77.5406, 
-        target: 0, 
-        sales: 0, 
-        tsm: 'Chandra Shekhar AN', 
-        asm: 'Suresh Be', 
-        bdm: 'Shivakumar HC', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: ''
-    },
-    {
-        name: 'PMG ENTERPRISES', 
-        city: 'Chikkaballapur', 
-        retailers: 18, 
-        lat: 13.3956, 
-        lng: 77.8702, 
-        target: 200000, 
-        sales: 163255, 
-        tsm: 'Vacant', 
-        asm: 'Suresh Be', 
-        bdm: 'Srikanth BN', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: ''
-    },
-    {
-        name: 'JAI MARUTHI ENTERPRISES (BANGLORE)', 
-        city: 'Bangalore', 
-        retailers: 47, 
-        lat: 13.0056, 
-        lng: 77.5562, 
-        target: 0, 
-        sales: 204901, 
-        tsm: 'Vacant', 
-        asm: 'Suresh Be', 
-        bdm: 'Vacant', 
-        classification: 'Distributor', 
-        state: 'Karnataka', 
-        active: 'Active',
-        segment: ''
-    }
-];
-function populateCityFilter() {
-    const cities = new Set();
-    distributorsData.forEach(d => {
-        if (d.city) cities.add(d.city);
-    });
-    
-    const cityFilter = document.getElementById('cityFilter');
-    cityFilter.innerHTML = '<option value="all">All Cities</option>';
-    
-    Array.from(cities).sort().forEach(city => {
-        const option = document.createElement('option');
-        option.value = city;
-        option.textContent = city;
-        cityFilter.appendChild(option);
-    });
-}
-// Plant locations
-const plants = {
-    plant1: {name: 'Bangalore Plant (Main)', lat: 12.996663, lng: 76.982185},
-    plant2: {name: 'Secondary Plant', lat: 12.9386, lng: 77.5441}
-};
-
-// Global variables
-let map, currentRadius = 50;
-let activeCategoryFilter = 'all';
-let activeSubCategoryFilter = 'all';
-let mapMarkers = [], coverageCircles = [], distributors = [], distanceLines = [];
-let pois = [], poisLoaded = false;
-let selectedPlantForExport = null;
-let selectedDistributorForExport = null;
-let customRadiusEnabled = false;
-let currentViewPOIs = [];
-let currentViewStats = {
-    totalInRadius: 0,
-    filtered: 0,
-    radius: 0,
-    category: 'all',
-    subCategory: 'all'
-};
-
-// Robust CSV Parser that handles quoted fields
-function parseCSVLine(line, delimiter = ',') {
-    const result = [];
-    let current = '';
-    let inQuotes = false;
-    
-    for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-        const nextChar = line[i + 1];
+function mapRamangaraDataToPOI(row) {
+    // Map your new data structure to the POI format the app expects
+    return {
+        // Core identification
+        POI_ID: row.business_id || `POI_${Math.random().toString(36).substr(2, 9)}`,
+        Business_Name: row.name || 'Unknown Business',
         
-        if (char === '"') {
-            if (inQuotes && nextChar === '"') {
-                current += '"';
-                i++;
-            } else {
-                inQuotes = !inQuotes;
-            }
-        } else if (char === delimiter && !inQuotes) {
-            result.push(current.trim());
-            current = '';
-        } else {
-            current += char;
+        // Location
+        Latitude: parseFloat(row.latitude),
+        Longitude: parseFloat(row.longitude),
+        Address: row.address || '',
+        City: extractCity(row.address) || row.nearest_plant || 'Karnataka',
+        State: 'Karnataka',
+        
+        // Categories
+        Category: row.business_category || 'Retail',
+        Sub_Category: row.channel || 'general',
+        
+        // Business details
+        Rating: parseFloat(row.rating) || 0,
+        Reviews: parseInt(row.user_ratings_total) || 0,
+        Price_Level: row.price_level || '',
+        Business_Status: row.business_status || 'OPERATIONAL',
+        
+        // Water business specific
+        Monthly_Requirement_Liters: parseInt(row.estimated_monthly_water_liters) || 0,
+        Monthly_Revenue_Potential: parseInt(row.estimated_monthly_water_revenue) || 0,
+        Priority_Score: parseFloat(row.priority_score) || 5,
+        Water_Priority: parseInt(row.water_priority) || 5,
+        Is_Wholesaler: row.is_wholesaler === 'Yes' ? 'Yes' : 'No',
+        Is_Chain: row.is_chain === 'Yes' ? 'Yes' : 'No',
+        
+        // Plant association
+        Nearest_Plant: row.nearest_plant || 'Ramanagara Plant',
+        Distance_To_Plant_KM: parseFloat(row.distance_from_plant_km) || 0,
+        Plant_Region: row.plant_region || 'Ramanagara-Kanakapura Region',
+        
+        // Source tracking
+        Data_Source: row.source || 'Google Places',
+        Place_ID: row.place_id || '',
+        
+        // Contact (if available)
+        Phone: row.phone || '',
+        Website: row.website || ''
+    };
+}
+
+// Helper function to extract city from address
+function extractCity(address) {
+    if (!address) return '';
+    
+    // Common city patterns in your addresses
+    const cities = [
+        'Ramanagara', 'Kanakapura', 'Channapatna', 'Bidadi', 
+        'Kunigal', 'Tumakuru', 'Huliyar', 'Koratagere', 'Madhugiri',
+        'Bangalore', 'Bengaluru', 'Mysore', 'Mandya'
+    ];
+    
+    const addressLower = address.toLowerCase();
+    for (const city of cities) {
+        if (addressLower.includes(city.toLowerCase())) {
+            return city;
         }
     }
     
-    result.push(current.trim());
-    return result;
+    return '';
 }
 
-// Helper function to format currency
-function formatCurrency(value) {
-    if (!value) return 'N/A';
-    const num = parseFloat(value.toString().replace(/[^0-9.-]/g, ''));
-    if (isNaN(num)) return value;
-    return '₹' + num.toLocaleString('en-IN');
-}
+// ============================================================
+// UPDATED PLANT FILTER FUNCTIONS
+// ============================================================
 
-// Helper function to format numbers
-function formatNumber(value) {
-    if (!value) return 'N/A';
-    const num = parseFloat(value);
-    if (isNaN(num)) return value;
-    return num.toLocaleString('en-IN');
-}
-
-// Calculate distance between two points
-function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-}
-
-// Find nearest plant for a given location
-function findNearestPlant(lat, lng) {
-    let nearestPlant = null;
-    let minDistance = Infinity;
+function filterPOIsByPlant(poisArray, plantKey) {
+    if (plantKey === 'all') {
+        return poisArray;
+    }
     
-    Object.entries(plants).forEach(([key, plant]) => {
-        const distance = calculateDistance(lat, lng, plant.lat, plant.lng);
-        if (distance < minDistance) {
-            minDistance = distance;
-            nearestPlant = {key, ...plant, distance};
-        }
+    const plant = plants[plantKey];
+    if (!plant) return poisArray;
+    
+    // Filter POIs within the plant's radius
+    return poisArray.filter(poi => {
+        const distance = calculateDistance(
+            poi.Latitude, 
+            poi.Longitude, 
+            plant.lat, 
+            plant.lng
+        );
+        return distance <= plant.radius;
+    });
+}
+
+function selectPlantFilter(plantKey) {
+    selectedPlant = plantKey;
+    
+    // Update UI
+    document.querySelectorAll('.plant-filter-btn').forEach(btn => {
+        btn.classList.remove('active');
     });
     
-    return nearestPlant;
+    const activeBtn = document.querySelector(`[data-plant="${plantKey}"]`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+    
+    // Update map
+    updateMap();
+    updateStatistics();
 }
 
-// Create detailed POI popup content
-function createPOIPopup(poi) {
-    const priority = poi.Priority || 'N/A';
-    const priorityClass = priority === 'High' ? 'badge-excellent' : 
-                          priority === 'Medium' ? 'badge-good' : 'badge-average';
-    
-    const consumption = poi.Water_Consumption || 'N/A';
-    const consumptionClass = consumption === 'High' ? 'badge-below' : 
-                             consumption === 'Medium' ? 'badge-average' : 'badge-good';
-    
-    return `
-        <div style="min-width: 280px; max-width: 350px; font-family: 'Segoe UI', sans-serif;">
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px; margin: -10px -10px 10px -10px; border-radius: 4px 4px 0 0;">
-                <div style="font-size: 15px; font-weight: 700; margin-bottom: 4px;">
-                    ${poi.Business_Name || poi.POI_ID || 'Unknown Business'}
-                </div>
-                <div style="font-size: 11px; opacity: 0.9;">
-                    ${poi.Sub_Category || poi.Category || 'Business'}
-                </div>
-            </div>
-            
-            <div style="padding: 8px 0;">
-                <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
-                    <tr>
-                        <td style="padding: 4px 0; color: #666; width: 45%;">📍 Location:</td>
-                        <td style="padding: 4px 0; font-weight: 600;">${poi.City || poi.Area || 'N/A'}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 4px 0; color: #666;">📮 Pincode:</td>
-                        <td style="padding: 4px 0; font-weight: 600;">${poi.Pincode || 'N/A'}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 4px 0; color: #666;">🏢 Type:</td>
-                        <td style="padding: 4px 0; font-weight: 600;">${poi.Business_Type || 'N/A'}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 4px 0; color: #666;">📏 Distance:</td>
-                        <td style="padding: 4px 0; font-weight: 600;">${poi.Distance_From_Plant_KM ? poi.Distance_From_Plant_KM + ' KM' : 'N/A'}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 4px 0; color: #666;">🏭 Plant:</td>
-                        <td style="padding: 4px 0; font-size: 11px;">${poi.Nearest_Plant || 'N/A'}</td>
-                    </tr>
-                </table>
-            </div>
-            
-            <div style="border-top: 1px solid #e0e0e0; margin: 8px 0; padding-top: 8px;">
-                <div style="font-size: 11px; font-weight: 700; color: #667eea; margin-bottom: 6px;">💧 WATER REQUIREMENTS</div>
-                <table style="width: 100%; font-size: 12px;">
-                    <tr>
-                        <td style="padding: 3px 0; color: #666;">Daily:</td>
-                        <td style="padding: 3px 0; font-weight: 600; text-align: right;">${formatNumber(poi.Daily_Requirement_Liters)} L</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 3px 0; color: #666;">Monthly:</td>
-                        <td style="padding: 3px 0; font-weight: 600; text-align: right;">${formatNumber(poi.Monthly_Requirement_Liters)} L</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 3px 0; color: #666;">Consumption:</td>
-                        <td style="padding: 3px 0; text-align: right;">
-                            <span class="performance-badge ${consumptionClass}" style="display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600;">
-                                ${consumption}
-                            </span>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-            
-            <div style="border-top: 1px solid #e0e0e0; margin: 8px 0; padding-top: 8px;">
-                <div style="font-size: 11px; font-weight: 700; color: #667eea; margin-bottom: 6px;">💰 BUSINESS POTENTIAL</div>
-                <table style="width: 100%; font-size: 12px;">
-                    <tr>
-                        <td style="padding: 3px 0; color: #666;">Revenue:</td>
-                        <td style="padding: 3px 0; font-weight: 600; text-align: right;">${formatCurrency(poi.Revenue_Potential)}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 3px 0; color: #666;">Priority:</td>
-                        <td style="padding: 3px 0; text-align: right;">
-                            <span class="performance-badge ${priorityClass}" style="display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600;">
-                                ${priority}
-                            </span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 3px 0; color: #666;">Lead Score:</td>
-                        <td style="padding: 3px 0; font-weight: 600; text-align: right;">${poi.Lead_Score || 'N/A'}/100</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 3px 0; color: #666;">Price Sensitivity:</td>
-                        <td style="padding: 3px 0; font-weight: 600; text-align: right;">${poi.Price_Sensitivity || 'N/A'}</td>
-                    </tr>
-                </table>
-            </div>
-            
-            <div style="border-top: 1px solid #e0e0e0; margin: 8px 0; padding-top: 8px;">
-                <div style="font-size: 11px; font-weight: 700; color: #667eea; margin-bottom: 6px;">📞 CONTACT INFO</div>
-                <table style="width: 100%; font-size: 11px;">
-                    <tr>
-                        <td style="padding: 2px 0; color: #666;">Status:</td>
-                        <td style="padding: 2px 0; font-weight: 600;">${poi.Contact_Status || 'New Lead'}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 2px 0; color: #666;">Sales Stage:</td>
-                        <td style="padding: 2px 0; font-weight: 600;">${poi.Sales_Stage || 'Prospecting'}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 2px 0; color: #666;">Best Time:</td>
-                        <td style="padding: 2px 0;">${poi.Best_Contact_Time || 'N/A'}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 2px 0; color: #666;">Current Supplier:</td>
-                        <td style="padding: 2px 0;">${poi.Current_Water_Supplier || 'Unknown'}</td>
-                    </tr>
-                </table>
-            </div>
-            
-            ${poi.Landmark ? `
-            <div style="background: #f8f9ff; padding: 8px; border-radius: 6px; margin-top: 8px; font-size: 11px;">
-                <strong style="color: #667eea;">📍 Landmark:</strong> ${poi.Landmark}
-            </div>
-            ` : ''}
-            
-            <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #e0e0e0; font-size: 10px; color: #999; text-align: center;">
-                ID: ${poi.POI_ID || 'N/A'} • Created: ${poi.Created_Date || 'N/A'}
-            </div>
-        </div>
-    `;
-}
+// ============================================================
+// PLANT CIRCLES ON MAP
+// ============================================================
 
-// Create detailed Distributor popup content
-function createDistributorPopup(dist) {
-    const achievementPercent = dist.achievement.toFixed(1);
-    const achievementClass = dist.achievement >= 90 ? 'badge-excellent' :
-                             dist.achievement >= 75 ? 'badge-good' :
-                             dist.achievement >= 60 ? 'badge-average' : 'badge-below';
+let plantCircles = [];
+
+function drawPlantCircles() {
+    // Clear existing circles
+    plantCircles.forEach(circle => map.removeLayer(circle));
+    plantCircles = [];
     
-    const nearestPlant = findNearestPlant(dist.lat, dist.lng);
-    
-    return `
-        <div style="min-width: 280px; font-family: 'Segoe UI', sans-serif;">
-            <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 12px; margin: -10px -10px 10px -10px; border-radius: 4px 4px 0 0;">
-                <div style="font-size: 15px; font-weight: 700; margin-bottom: 4px;">
-                    📦 ${dist.name}
-                </div>
-                <div style="font-size: 11px; opacity: 0.9;">
-                    ${dist.classification} - ${dist.city}
-                </div>
-            </div>
-            
-            <div style="padding: 8px 0;">
-                <div style="text-align: center; margin: 10px 0;">
-                    <div style="font-size: 32px; font-weight: 700; color: ${dist.achievement >= 75 ? '#28a745' : dist.achievement >= 60 ? '#ffc107' : '#dc3545'};">
-                        ${achievementPercent}%
+    // Draw circle for each plant
+    Object.keys(plants).forEach(key => {
+        const plant = plants[key];
+        
+        const circle = L.circle([plant.lat, plant.lng], {
+            color: plant.color,
+            fillColor: plant.color,
+            fillOpacity: 0.1,
+            radius: plant.radius * 1000, // Convert KM to meters
+            weight: 2
+        }).addTo(map);
+        
+        // Add plant marker
+        const marker = L.marker([plant.lat, plant.lng], {
+            icon: L.divIcon({
+                className: 'plant-marker',
+                html: `
+                    <div style="
+                        background: ${plant.color};
+                        color: white;
+                        padding: 8px 12px;
+                        border-radius: 20px;
+                        font-weight: 700;
+                        font-size: 12px;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                        white-space: nowrap;
+                    ">
+                        🏭 ${plant.name}
                     </div>
-                    <div style="font-size: 11px; color: #666; margin-top: 4px;">
-                        <span class="performance-badge ${achievementClass}" style="display: inline-block; padding: 3px 12px; border-radius: 12px; font-size: 11px; font-weight: 600;">
-                            ${dist.rating}
-                        </span>
-                    </div>
+                `
+            })
+        }).addTo(map);
+        
+        // Popup
+        marker.bindPopup(`
+            <div style="min-width: 200px;">
+                <div style="font-weight: 700; font-size: 14px; margin-bottom: 8px; color: ${plant.color};">
+                    🏭 ${plant.name}
                 </div>
-                
-                <table style="width: 100%; font-size: 12px; margin-top: 10px;">
-                    <tr style="background: #f8f9ff;">
-                        <td style="padding: 6px; color: #666;">🎯 Target:</td>
-                        <td style="padding: 6px; font-weight: 600; text-align: right;">₹${(dist.target / 100000).toFixed(1)}L</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 6px; color: #666;">💰 Sales:</td>
-                        <td style="padding: 6px; font-weight: 600; text-align: right;">₹${(dist.sales / 100000).toFixed(1)}L</td>
-                    </tr>
-                    <tr style="background: #f8f9ff;">
-                        <td style="padding: 6px; color: #666;">📍 Retailers:</td>
-                        <td style="padding: 6px; font-weight: 600; text-align: right;">${dist.retailers}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 6px; color: #666;">👤 TSM:</td>
-                        <td style="padding: 6px; font-weight: 600; text-align: right;">${dist.tsm}</td>
-                    </tr>
-                    <tr style="background: #f8f9ff;">
-                        <td style="padding: 6px; color: #666;">🏙️ City:</td>
-                        <td style="padding: 6px; font-weight: 600; text-align: right;">${dist.city}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 6px; color: #666;">🏭 Nearest Plant:</td>
-                        <td style="padding: 6px; font-weight: 600; text-align: right;">${nearestPlant.distance.toFixed(1)} KM</td>
-                    </tr>
-                    <tr style="background: #f8f9ff;">
-                        <td style="padding: 6px; color: #666;">🏢 Type:</td>
-                        <td style="padding: 6px; font-weight: 600; text-align: right;">${dist.classification}</td>
-                    </tr>
-                </table>
-                
-                <div style="margin-top: 12px; padding: 10px; background: ${dist.achievement >= 90 ? '#d4edda' : dist.achievement >= 75 ? '#fff3cd' : '#f8d7da'}; border-radius: 6px; border-left: 4px solid ${dist.achievement >= 90 ? '#28a745' : dist.achievement >= 75 ? '#ffc107' : '#dc3545'};">
-                    <div style="font-size: 11px; font-weight: 600; margin-bottom: 4px;">
-                        ${dist.achievement >= 90 ? '🌟 Excellent Performance!' : 
-                          dist.achievement >= 75 ? '✅ Good Performance' : 
-                          dist.achievement >= 60 ? '⚠️ Average Performance' : '❌ Below Target'}
-                    </div>
-                    <div style="font-size: 10px;">
-                        Gap: ₹${((dist.target - dist.sales) / 100000).toFixed(1)}L
-                    </div>
+                <div style="font-size: 12px; line-height: 1.6;">
+                    <div><strong>Region:</strong> ${plant.region}</div>
+                    <div><strong>Coverage:</strong> ${plant.coverage}</div>
+                    <div><strong>Radius:</strong> ${plant.radius} KM</div>
+                    <div><strong>Capacity:</strong> ${plant.capacity}</div>
+                    <div><strong>Status:</strong> <span style="color: #28a745;">●</span> ${plant.status}</div>
                 </div>
-                
-                <button onclick="selectDistributorForPOIExport(${dist.index})" style="width: 100%; margin-top: 10px; padding: 8px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">
-                    📍 Export POIs Around This Distributor
+                <button 
+                    onclick="selectPlantFilter('${key}')" 
+                    style="
+                        width: 100%;
+                        margin-top: 10px;
+                        padding: 6px;
+                        background: ${plant.color};
+                        color: white;
+                        border: none;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-weight: 600;
+                    "
+                >
+                    View POIs
                 </button>
             </div>
-        </div>
-    `;
+        `);
+        
+        plantCircles.push(circle);
+        plantCircles.push(marker);
+    });
 }
 
-// Authentication functions
-function handleLogin(event) {
-    event.preventDefault();
+// ============================================================
+// UPDATED STATISTICS WITH PLANT BREAKDOWN
+// ============================================================
+
+function updateStatistics() {
+    const filtered = getFilteredPOIs();
     
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value;
-    const errorMsg = document.getElementById('errorMessage');
+    // Overall stats
+    const totalPOIs = filtered.length;
+    const totalWholesalers = filtered.filter(p => p.Is_Wholesaler === 'Yes').length;
+    const totalRevenue = filtered.reduce((sum, p) => sum + (p.Monthly_Revenue_Potential || 0), 0);
+    const avgRating = filtered.filter(p => p.Rating > 0).reduce((sum, p) => sum + p.Rating, 0) / 
+                      filtered.filter(p => p.Rating > 0).length || 0;
     
-    if (VALID_USERS[username] && VALID_USERS[username] === password) {
-        errorMsg.classList.remove('show');
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('app').classList.add('active');
-        document.getElementById('userDisplay').textContent = `👤 ${username}`;
-        
-        const loginTime = new Date().getTime();
-        sessionStorage.setItem('loggedIn', 'true');
-        sessionStorage.setItem('username', username);
-        sessionStorage.setItem('loginTime', loginTime);
-        
-        initializeApp();
-    } else {
-        errorMsg.classList.add('show');
-        document.getElementById('password').value = '';
-        document.getElementById('username').focus();
+    // By plant stats
+    const ramangaraPOIs = filtered.filter(p => 
+        calculateDistance(p.Latitude, p.Longitude, plants.ramanagara.lat, plants.ramanagara.lng) <= plants.ramanagara.radius
+    );
+    const kunigalPOIs = filtered.filter(p => 
+        calculateDistance(p.Latitude, p.Longitude, plants.kunigal.lat, plants.kunigal.lng) <= plants.kunigal.radius
+    );
+    
+    // Update display
+    document.getElementById('totalPOIs').textContent = totalPOIs.toLocaleString();
+    document.getElementById('totalWholesalers').textContent = totalWholesalers.toLocaleString();
+    document.getElementById('totalRevenue').textContent = `₹${(totalRevenue / 1000).toFixed(0)}K`;
+    document.getElementById('avgRating').textContent = avgRating.toFixed(1);
+    
+    // Plant breakdown
+    if (document.getElementById('plantBreakdown')) {
+        document.getElementById('plantBreakdown').innerHTML = `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 12px; border-radius: 8px; color: white;">
+                    <div style="font-size: 11px; opacity: 0.9;">Ramanagara Plant</div>
+                    <div style="font-size: 20px; font-weight: 700;">${ramangaraPOIs.length.toLocaleString()}</div>
+                    <div style="font-size: 10px; opacity: 0.8;">businesses</div>
+                </div>
+                <div style="background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); padding: 12px; border-radius: 8px; color: white;">
+                    <div style="font-size: 11px; opacity: 0.9;">Kunigal Plant</div>
+                    <div style="font-size: 20px; font-weight: 700;">${kunigalPOIs.length.toLocaleString()}</div>
+                    <div style="font-size: 10px; opacity: 0.8;">businesses</div>
+                </div>
+            </div>
+        `;
     }
 }
 
-function logout() {
-    if (confirm('Are you sure you want to logout?')) {
-        sessionStorage.clear();
-        location.reload();
-    }
-}
+// ============================================================
+// UPDATED DATA LOADING FUNCTION
+// ============================================================
 
-function checkSessionTimeout() {
-    const loginTime = sessionStorage.getItem('loginTime');
-    if (loginTime) {
-        const currentTime = new Date().getTime();
-        const elapsed = (currentTime - loginTime) / 1000 / 60;
-        
-        if (elapsed > SESSION_TIMEOUT) {
-            alert('⏰ Session expired. Please login again.');
-            sessionStorage.clear();
-            location.reload();
-        }
-    }
-}
-
-window.addEventListener('load', function() {
-    if (sessionStorage.getItem('loggedIn') === 'true') {
-        checkSessionTimeout();
-        
-        if (sessionStorage.getItem('loggedIn') === 'true') {
-            const username = sessionStorage.getItem('username');
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('app').classList.add('active');
-            document.getElementById('userDisplay').textContent = `👤 ${username}`;
-            initializeApp();
-        }
-    }
-});
-
-setInterval(checkSessionTimeout, 5 * 60 * 1000);
-
-// POI Data Loading Functions
-async function loadPOIData() {
+async function loadPOIsFromCSV() {
     try {
         console.log('📥 Loading POI data from GitHub...');
-        console.log('📍 GitHub URL:', POI_ZIP_URL);
-        document.getElementById('poiStatusText').textContent = 'Loading from GitHub...';
+        console.log(`URL: ${POI_CSV_URL}`);
         
-        const response = await fetch(POI_ZIP_URL);
-        console.log('📡 Response status:', response.status, response.statusText);
-        
+        const response = await fetch(POI_CSV_URL);
         if (!response.ok) {
-            if (response.status === 404) {
-                throw new Error(`File not found (404). Please check your configuration.`);
-            }
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
-        const blob = await response.blob();
-        console.log('📦 Downloaded:', blob.size.toLocaleString(), 'bytes');
+        const csvText = await response.text();
+        console.log(`✅ Downloaded ${(csvText.length / 1024).toFixed(0)} KB`);
         
-        if (blob.size === 0) {
-            throw new Error('Downloaded file is empty');
-        }
+        // Parse CSV
+        const rows = parseCSV(csvText);
+        console.log(`📊 Parsed ${rows.length} rows`);
         
-        await loadPOIDataFromBlob(blob);
+        // Map to POI format
+        pois = rows.map(row => mapRamangaraDataToPOI(row)).filter(poi => poi.Latitude && poi.Longitude);
         
-    } catch (error) {
-        console.error('❌ Error loading from GitHub:', error);
-        document.getElementById('poiStatusText').innerHTML = 
-            `<span style="color: #dc3545;">⚠️ ${error.message}</span>`;
-    }
-}
-
-async function loadPOIDataFromBlob(blob) {
-    try {
-        console.log('📦 Processing file, size:', blob.size, 'bytes');
-        console.log('📦 Extracting ZIP...');
-        document.getElementById('poiStatusText').textContent = 'Extracting ZIP file...';
+        console.log(`✅ Loaded ${pois.length} POIs`);
+        console.log(`   Ramanagara: ${pois.filter(p => p.Nearest_Plant === 'Ramanagara Plant').length}`);
+        console.log(`   Kunigal: ${pois.filter(p => p.Nearest_Plant === 'Kunigal Plant').length}`);
+        console.log(`   Wholesalers: ${pois.filter(p => p.Is_Wholesaler === 'Yes').length}`);
         
-        const zip = await JSZip.loadAsync(blob);
-        const fileNames = Object.keys(zip.files);
-        console.log('📁 Files in ZIP:', fileNames);
-        
-        if (fileNames.length === 0) {
-            throw new Error('ZIP file contains no files');
-        }
-        
-        const csvFileName = fileNames.find(name => 
-            !name.startsWith('__MACOSX') && 
-            !name.startsWith('.') &&
-            (name.toLowerCase().endsWith('.csv') || 
-             name.toLowerCase().endsWith('.txt') || 
-             name.toLowerCase().endsWith('.tsv'))
-        );
-        
-        if (!csvFileName) {
-            throw new Error('No CSV file found in ZIP');
-        }
-        
-        console.log(`📄 Extracting file: ${csvFileName}`);
-        document.getElementById('poiStatusText').textContent = `Extracting ${csvFileName}...`;
-        
-        const csvText = await zip.files[csvFileName].async('text');
-        console.log(`✅ CSV extracted: ${csvText.length.toLocaleString()} characters`);
-        
-        if (csvText.length === 0) {
-            throw new Error('CSV file is empty');
-        }
-        
-        console.log('📝 First 300 chars:', csvText.substring(0, 300));
-        
-        await parsePOIData(csvText, csvFileName);
+        // Initialize map
+        initializeMap();
+        updateStatistics();
         
     } catch (error) {
-        console.error('❌ ERROR:', error);
-        document.getElementById('poiStatusText').innerHTML = 
-            `<span style="color: #dc3545;">⚠️ Error: ${error.message}</span>`;
-        throw error;
+        console.error('❌ Error loading POIs:', error);
+        alert(`Failed to load POI data: ${error.message}\n\nPlease check:\n1. File exists in GitHub repo\n2. File name is correct\n3. Branch is correct`);
     }
 }
 
-async function parsePOIData(csvText, fileName) {
-    console.log('🔍 Parsing CSV data with robust parser...');
-    document.getElementById('poiStatusText').textContent = 'Parsing CSV data...';
+// Simple CSV parser
+function parseCSV(text) {
+    const lines = text.trim().split('\n');
+    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
     
-    const lines = csvText.trim().split('\n');
-    console.log(`📊 Total lines: ${lines.length.toLocaleString()}`);
-    
-    if (lines.length < 2) {
-        throw new Error('CSV has no data rows');
-    }
-    
-    const firstLine = lines[0];
-    const commaCount = (firstLine.match(/,/g) || []).length;
-    const tabCount = (firstLine.match(/\t/g) || []).length;
-    const delimiter = commaCount > tabCount ? ',' : '\t';
-    
-    console.log(`🔧 Delimiter: ${delimiter === ',' ? 'COMMA' : 'TAB'}`);
-    
-    const headers = parseCSVLine(firstLine, delimiter);
-    console.log(`📋 Headers (${headers.length}):`, headers.slice(0, 20));
-    
-    let latCol = headers.findIndex(h => 
-        h.toLowerCase() === 'latitude' || h.toLowerCase() === 'lat'
-    );
-    let lngCol = headers.findIndex(h => 
-        h.toLowerCase() === 'longitude' || h.toLowerCase() === 'lng' || h.toLowerCase() === 'long'
-    );
-    
-    console.log(`📍 Latitude column: ${latCol} ("${headers[latCol]}")`);
-    console.log(`📍 Longitude column: ${lngCol} ("${headers[lngCol]}")`);
-    
-    if (latCol === -1 || lngCol === -1) {
-        throw new Error(`Could not find lat/lng columns`);
-    }
-    
-    pois = [];
-    let validCount = 0;
-    let invalidCount = 0;
-    
-    console.log('\n🔄 Starting row processing...');
-    
-    for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-        
-        try {
-            const values = parseCSVLine(line, delimiter);
-            
-            if (values.length < headers.length - 5) {
-                invalidCount++;
-                continue;
-            }
-            
-            const poi = {};
-            headers.forEach((header, index) => {
-                poi[header] = values[index] ? values[index].trim() : '';
-            });
-            
-            const lat = parseFloat(values[latCol]);
-            const lng = parseFloat(values[lngCol]);
-            
-            if (isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180 || (lat === 0 && lng === 0)) {
-                invalidCount++;
-                continue;
-            }
-            
-            poi.Latitude = lat;
-            poi.Longitude = lng;
-            pois.push(poi);
-            validCount++;
-            
-            if (i % 10000 === 0) {
-                console.log(`⏳ Processing: ${i.toLocaleString()}/${lines.length.toLocaleString()} rows (${validCount.toLocaleString()} valid)`);
-                document.getElementById('poiStatusText').textContent = 
-                    `Processing: ${i.toLocaleString()}/${lines.length.toLocaleString()} rows...`;
-                
-                await new Promise(resolve => setTimeout(resolve, 0));
-            }
-        } catch (parseError) {
-            invalidCount++;
-        }
-    }
-    
-    console.log(`\n✅ SUCCESS! Loaded ${validCount.toLocaleString()} POIs (${invalidCount.toLocaleString()} invalid)`);
-    
-    if (validCount === 0) {
-        throw new Error(`No valid POIs found!`);
-    }
-    
-    poisLoaded = true;
-    updatePOIStats();
-    updateMap();
+    return lines.slice(1).map(line => {
+        const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+        const obj = {};
+        headers.forEach((header, i) => {
+            obj[header] = values[i] || '';
+        });
+        return obj;
+    });
 }
 
-function updatePOIStats() {
-    document.getElementById('totalPOIs').textContent = pois.length.toLocaleString();
-    document.getElementById('poiCountHeader').textContent = pois.length.toLocaleString();
-    document.getElementById('poiStatusText').textContent = 
-        `✅ ${pois.length.toLocaleString()} POIs loaded successfully`;
-    
-    const totalRetailers = distributors.reduce((sum, d) => sum + d.retailers, 0);
-    const coverage = totalRetailers > 0 && pois.length > 0 ? (totalRetailers / pois.length * 100) : 0;
-    document.getElementById('coverage').textContent = coverage.toFixed(1) + '%';
-    
-    const wsNeeded = Math.ceil(pois.length / 150);
-    document.getElementById('newWSNeeded').textContent = wsNeeded + '+';
-    document.getElementById('investment').textContent = '₹' + Math.ceil(wsNeeded * 0.6) + 'Cr';
-    document.getElementById('monthlyRev').textContent = '₹' + Math.ceil(wsNeeded * 0.3) + 'Cr';
-}
+// ============================================================
+// EXPORT FUNCTIONS UPDATED FOR NEW PLANTS
+// ============================================================
 
-// Draw distance lines between plants and distributors
-function drawPlantDistributorLines() {
-    // Clear existing lines
-    distanceLines.forEach(line => map.removeLayer(line));
-    distanceLines = [];
-    
-    if (!document.getElementById('showDistLines').checked) {
+function exportPOIsByPlant(plantKey, radiusKM) {
+    const plant = plants[plantKey];
+    if (!plant) {
+        alert('Invalid plant selection');
         return;
     }
     
-    distributors.forEach(dist => {
-        const nearestPlant = findNearestPlant(dist.lat, dist.lng);
-        
-        const line = L.polyline(
-            [[nearestPlant.lat, nearestPlant.lng], [dist.lat, dist.lng]],
-            {
-                color: '#FF6B6B',
-                weight: 2,
-                opacity: 0.6,
-                dashArray: '5, 10'
-            }
-        ).addTo(map);
-        
-        // Add tooltip to the line showing distance
-        line.bindTooltip(
-            `<div style="text-align: center;">
-                <b>${dist.name}</b><br>
-                Distance: ${nearestPlant.distance.toFixed(2)} KM<br>
-                From: ${nearestPlant.name}
-            </div>`,
-            {
-                permanent: false,
-                direction: 'center'
-            }
-        );
-        
-        distanceLines.push(line);
-    });
-}
-
-// Application initialization
-function initializeApp() {
-    distributorsData.forEach((d, index) => {
-        const achievement = d.target > 0 ? (d.sales / d.target * 100) : 0;
-        let rating = 'Below Average';
-        if (achievement >= 90) rating = 'Excellent';
-        else if (achievement >= 75) rating = 'Good';
-        else if (achievement >= 60) rating = 'Average';
-
-        distributors.push({...d, achievement, rating, index});
-    });
-
-    map = L.map('map').setView([12.9716, 77.5946], 10);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap',
-        maxZoom: 18
-    }).addTo(map);
-
-    const plantIcon = L.divIcon({
-        html: '<div style="background: #FF6B6B; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 16px;">🏭</div>',
-        className: '',
-        iconSize: [30, 30]
-    });
-
-    Object.values(plants).forEach(plant => {
-        L.marker([plant.lat, plant.lng], {icon: plantIcon})
-            .bindPopup(`<div style="text-align: center; padding: 5px;"><b style="font-size: 14px;">🏭 ${plant.name}</b><br><span style="font-size: 12px; color: #666;">Water Production Facility</span></div>`)
-            .addTo(map);
-    });
-
-    setupEventListeners();
-    updateDistributorList();
-    populateDistributorDropdown();
-    updateMap();
-    loadPOIData();
-    populateCityFilter(); // ← ADD THIS LINE
-
-    // Update total distributors count in UI
-    document.getElementById('totalDist').textContent = distributors.length;
-    const totalRetailers = distributors.reduce((sum, d) => sum + d.retailers, 0);
-    document.getElementById('totalRetailers').textContent = totalRetailers.toLocaleString() + '+';
-
-    console.log(`✅ App Initialized: ${distributors.length} Distributors`);
-}
-
-function setupEventListeners() {
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', function() {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-            this.classList.add('active');
-            document.getElementById(this.dataset.tab + '-tab').classList.add('active');
-        });
-    });
-
-    document.querySelectorAll('.radius-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.radius-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            currentRadius = parseInt(this.dataset.radius);
-            customRadiusEnabled = false;
-            document.getElementById('customRadiusInput').value = '';
-            updateMap();
-        });
-    });
-}
-
-function toggleCustomRadius() {
-    customRadiusEnabled = document.getElementById('useCustomRadius').checked;
-    document.getElementById('customRadiusInput').disabled = !customRadiusEnabled;
-    
-    if (customRadiusEnabled) {
-        document.querySelectorAll('.radius-btn').forEach(b => b.classList.remove('active'));
-    }
-}
-
-function applyCustomRadius() {
-    const input = document.getElementById('customRadiusInput');
-    const value = parseInt(input.value);
-    
-    if (isNaN(value) || value < 1 || value > 500) {
-        alert('Please enter a valid radius between 1 and 500 KM');
-        return;
-    }
-    
-    currentRadius = value;
-    customRadiusEnabled = true;
-    document.getElementById('useCustomRadius').checked = true;
-    document.querySelectorAll('.radius-btn').forEach(b => b.classList.remove('active'));
-    updateMap();
-}
-
-function updateDistributorList() {
-    const list = document.getElementById('distributorList');
-    list.innerHTML = '';
-    
-    distributors.forEach((dist, index) => {
-        const item = document.createElement('div');
-        item.className = 'distributor-item';
-        item.onclick = () => focusOnDistributor(index);
-        
-        const badgeClass = 
-            dist.rating === 'Excellent' ? 'badge-excellent' :
-            dist.rating === 'Good' ? 'badge-good' :
-            dist.rating === 'Average' ? 'badge-average' : 'badge-below';
-        
-        item.innerHTML = `
-            <div class="distributor-name">
-                ${dist.name}
-                <span class="performance-badge ${badgeClass}">
-                    ${dist.achievement.toFixed(1)}%
-                </span>
-            </div>
-            <div class="distributor-meta">
-                ${dist.city} • ${dist.retailers} retailers • ${dist.classification}
-            </div>
-        `;
-        
-        list.appendChild(item);
-    });
-}
-
-function focusOnDistributor(index) {
-    const dist = distributors[index];
-    map.setView([dist.lat, dist.lng], 13);
-    
-    document.querySelectorAll('.distributor-item').forEach((item, i) => {
-        item.classList.toggle('selected', i === index);
-    });
-}
-
-function updateMap() {
-    mapMarkers.forEach(marker => map.removeLayer(marker));
-    mapMarkers = [];
-    coverageCircles.forEach(circle => map.removeLayer(circle));
-    coverageCircles = [];
-
-    // Reset current view stats
-    currentViewPOIs = [];
-    currentViewStats = {
-        totalInRadius: 0,
-        filtered: 0,
-        radius: currentRadius,
-        category: activeCategoryFilter,
-        subCategory: activeSubCategoryFilter
-    };
-
-    if (currentRadius > 0 && document.getElementById('showPlants').checked) {
-        Object.values(plants).forEach(plant => {
-            const circle = L.circle([plant.lat, plant.lng], {
-                radius: currentRadius * 1000,
-                color: '#667eea',
-                fillColor: '#667eea',
-                fillOpacity: 0.15,
-                weight: 2
-            }).addTo(map);
-            coverageCircles.push(circle);
-        });
-    }
-
-    if (document.getElementById('showDistributors').checked) {
-        distributors.forEach(dist => {
-            const color = dist.achievement >= 75 ? '#28a745' : 
-                         dist.achievement >= 60 ? '#ffc107' : '#dc3545';
-            const distIcon = L.divIcon({
-                html: `<div style="background: ${color}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>`,
-                className: '',
-                iconSize: [20, 20]
-            });
-
-            const marker = L.marker([dist.lat, dist.lng], {icon: distIcon})
-                .bindPopup(createDistributorPopup(dist), { maxWidth: 350 })
-                .addTo(map);
-            
-            marker.bindTooltip(`<b>${dist.name}</b><br>${dist.achievement.toFixed(1)}% • ${dist.classification}`, {
-                permanent: false,
-                direction: 'top'
-            });
-            
-            mapMarkers.push(marker);
-        });
-    }
-
-    if (document.getElementById('showCoverage').checked) {
-        const coverageRadius = parseInt(document.getElementById('coverageRadius').value) || 25;
-        distributors.forEach(dist => {
-            const circle = L.circle([dist.lat, dist.lng], {
-                radius: coverageRadius * 1000,
-                color: '#28a745',
-                fillColor: '#28a745',
-                fillOpacity: 0.08,
-                weight: 1
-            }).addTo(map);
-            
-            circle.bindTooltip(
-                `<div style="text-align: center;">
-                    <b>${dist.name}</b><br>
-                    Coverage: ${coverageRadius} KM
-                </div>`,
-                {
-                    permanent: false,
-                    direction: 'center'
-                }
-            );
-            
-            coverageCircles.push(circle);
-        });
-    }
-
-    if (document.getElementById('showPOIs').checked && pois.length > 0) {
-        let poisInRadius = pois;
-
-        // First filter by radius if active
-        if (currentRadius > 0) {
-            poisInRadius = poisInRadius.filter(poi => {
-                return Object.values(plants).some(plant => {
-                    const distance = calculateDistance(poi.Latitude, poi.Longitude, plant.lat, plant.lng);
-                    return distance <= currentRadius;
-                });
-            });
-        }
-
-        // Update total POIs in radius
-        currentViewStats.totalInRadius = poisInRadius.length;
-
-        // Apply category filter - SUPPORTS MULTIPLE
-        let filteredPOIs = poisInRadius;
-        if (activeCategoryFilter !== 'all') {
-            if (activeCategoryFilter.includes(',')) {
-                // Multiple categories selected
-                const cats = activeCategoryFilter.split(',');
-                filteredPOIs = filteredPOIs.filter(poi => cats.includes(poi.Category));
-            } else {
-                // Single category
-                filteredPOIs = filteredPOIs.filter(poi => poi.Category === activeCategoryFilter);
-            }
-        }
-
-        // Apply sub-category filter (only if Distribution is selected)
-        if (activeCategoryFilter.includes('Distribution') && activeSubCategoryFilter !== 'all') {
-            filteredPOIs = filteredPOIs.filter(poi => {
-                if (poi.Category === 'Distribution') {
-                    return poi.Sub_Category === activeSubCategoryFilter;
-                }
-                return true; // Keep other categories if multiple selected
-            });
-        }
-        // Store filtered POIs for export
-        currentViewPOIs = filteredPOIs;
-        currentViewStats.filtered = filteredPOIs.length;
-
-        // Update UI with current stats
-        updateCurrentViewStats();
-
-        // Display POIs on map (sample for performance)
-        const displayPOIs = filteredPOIs.filter((_, index) => index % 10 === 0);
-
-        displayPOIs.forEach(poi => {
-            const color = getMarkerColor(poi.Category);
-            const size = poi.Priority === 'High' ? 8 : 5;
-            
-            const marker = L.circleMarker([poi.Latitude, poi.Longitude], {
-                radius: size,
-                fillColor: color,
-                color: 'white',
-                weight: 1,
-                fillOpacity: 0.7
-            }).bindPopup(createPOIPopup(poi), { maxWidth: 380 })
-            .addTo(map);
-            
-            const tooltipContent = `
-                <div style="text-align: center;">
-                    <b>${poi.Business_Name || poi.POI_ID}</b><br>
-                    <span style="font-size: 11px;">${poi.Sub_Category || poi.Category} • ${poi.City}</span><br>
-                    <span style="font-size: 11px; color: #667eea;">${formatNumber(poi.Monthly_Requirement_Liters)} L/month</span>
-                </div>
-            `;
-            marker.bindTooltip(tooltipContent, {
-                permanent: false,
-                direction: 'top',
-                offset: [0, -5]
-            });
-            
-            mapMarkers.push(marker);
-        });
-    } else {
-        updateCurrentViewStats();
-    }
-    
-    // Draw distance lines
-    drawPlantDistributorLines();
-}
-
-function updateCurrentViewStats() {
-    document.getElementById('currentRadiusPOIs').textContent = currentViewStats.totalInRadius.toLocaleString();
-    document.getElementById('filteredPOIs').textContent = currentViewStats.filtered.toLocaleString();
-    
-    // Update active radius display
-    if (currentViewStats.radius > 0) {
-        document.getElementById('activeRadiusDisplay').textContent = currentViewStats.radius + ' KM';
-    } else {
-        document.getElementById('activeRadiusDisplay').textContent = 'None (All POIs)';
-    }
-    
-    // Update active filter display
-    let filterText = currentViewStats.category === 'all' ? 'All Categories' : currentViewStats.category;
-    if (currentViewStats.category === 'Distribution' && currentViewStats.subCategory !== 'all') {
-        filterText += ` > ${currentViewStats.subCategory}`;
-    }
-    document.getElementById('activeFilterDisplay').textContent = filterText;
-}
-
-function exportCurrentViewPOIs() {
-    if (currentViewPOIs.length === 0) {
-        if (pois.length === 0) {
-            alert('No POI data available. Please wait for data to load.');
-        } else {
-            alert('No POIs match the current filters and radius. Please adjust your filters or radius.');
-        }
-        return;
-    }
-
-    // Create descriptive filename
-    const radiusText = currentViewStats.radius > 0 ? `${currentViewStats.radius}KM` : 'AllRadius';
-    const categoryText = currentViewStats.category === 'all' ? 'AllCategories' : currentViewStats.category.replace(/\s+/g, '_');
-    const subCategoryText = currentViewStats.subCategory !== 'all' ? `_${currentViewStats.subCategory.replace(/\s+/g, '_')}` : '';
-    const date = new Date().toISOString().split('T')[0];
-    
-    const filename = `POIs_${radiusText}_${categoryText}${subCategoryText}_${date}.csv`;
-    
-    // Add export metadata to POIs
-    const enrichedPOIs = currentViewPOIs.map(poi => {
-        // Find nearest plant for each POI
-        const nearestPlant = findNearestPlant(poi.Latitude, poi.Longitude);
-        
-        return {
-            Export_Date: new Date().toISOString(),
-            Export_Radius_KM: currentViewStats.radius || 'All',
-            Export_Category_Filter: currentViewStats.category,
-            Export_SubCategory_Filter: currentViewStats.subCategory !== 'all' ? currentViewStats.subCategory : 'All',
-            Nearest_Plant_Name: nearestPlant.name,
-            Distance_To_Plant_KM: nearestPlant.distance.toFixed(2),
-            ...poi
-        };
-    });
-    
-    exportPOIsToCSV(enrichedPOIs, filename);
-    
-    // Show detailed export confirmation
-    const categoryInfo = currentViewStats.category === 'all' ? 'All Categories' : 
-                        currentViewStats.subCategory !== 'all' ? 
-                        `${currentViewStats.category} > ${currentViewStats.subCategory}` : 
-                        currentViewStats.category;
-    
-    alert(`✅ Export Successful!\n\n` +
-          `POIs Exported: ${currentViewPOIs.length.toLocaleString()}\n` +
-          `Radius: ${currentViewStats.radius > 0 ? currentViewStats.radius + ' KM' : 'All POIs'}\n` +
-          `Filter: ${categoryInfo}\n\n` +
-          `File: ${filename}`);
-}
-
-function getMarkerColor(category) {
-    const colors = {
-        'Distribution': '#4ECDC4',
-        'Retail': '#FFD93D',
-        'Food & Beverage': '#6BCB77',
-        'Hospitality': '#FF6B6B',
-        'Corporate': '#9D84B7',
-        'Healthcare': '#E74C3C'
-    };
-    return colors[category] || '#95A5A6';
-}
-
-function filterDistributors() {
-    const perfFilter = document.getElementById('perfFilter').value;
-    const cityFilter = document.getElementById('cityFilter').value;
-    const classFilter = document.getElementById('classFilter').value;
-    
-    const filtered = distributors.filter(d => {
-        const perfMatch = perfFilter === 'all' || d.rating === perfFilter;
-        const cityMatch = cityFilter === 'all' || d.city === cityFilter;
-        const classMatch = classFilter === 'all' || d.classification === classFilter;
-        return perfMatch && cityMatch && classMatch;
-    });
-    
-    const list = document.getElementById('distributorList');
-    list.innerHTML = '';
-    
-    filtered.forEach((dist) => {
-        const item = document.createElement('div');
-        item.className = 'distributor-item';
-        item.onclick = () => focusOnDistributor(distributors.indexOf(dist));
-        
-        const badgeClass = 
-            dist.rating === 'Excellent' ? 'badge-excellent' :
-            dist.rating === 'Good' ? 'badge-good' :
-            dist.rating === 'Average' ? 'badge-average' : 'badge-below';
-        
-        item.innerHTML = `
-            <div class="distributor-name">
-                ${dist.name}
-                <span class="performance-badge ${badgeClass}">
-                    ${dist.achievement.toFixed(1)}%
-                </span>
-            </div>
-            <div class="distributor-meta">
-                ${dist.city} • ${dist.retailers} retailers • ${dist.classification}
-            </div>
-        `;
-        
-        list.appendChild(item);
-    });
-}
-
-// Filter POIs by Category
-function filterPOIsByCategory(category, element) {
-    console.log('Filtering by category:', category);
-    
-    // Remove active class from ALL category filter chips (not sub-category)
-    const allChips = document.querySelectorAll('#expansion-tab .control-section:first-child .filter-chip');
-    allChips.forEach(chip => {
-        chip.classList.remove('active');
-    });
-    
-    // Add active class to clicked element
-    element.classList.add('active');
-    
-    // Update the active filter
-    activeCategoryFilter = category;
-    
-    // Show/hide sub-category filters for Distribution
-    const subFilters = document.getElementById('distributionSubFilters');
-    if (category === 'Distribution') {
-        subFilters.classList.add('active');
-        // Reset sub-category filter to 'all'
-        activeSubCategoryFilter = 'all';
-        // Reset sub-category chips to show 'All Distribution' as active
-        document.querySelectorAll('.sub-category-filters .filter-chip').forEach(chip => {
-            chip.classList.remove('active');
-        });
-        document.querySelector('.sub-category-filters .filter-chip').classList.add('active');
-    } else {
-        subFilters.classList.remove('active');
-        activeSubCategoryFilter = 'all';
-    }
-    
-    console.log('Active category:', activeCategoryFilter);
-    console.log('Active sub-category:', activeSubCategoryFilter);
-    
-    // Update the map with new filters
-    updateMap();
-}
-
-// Filter POIs by Sub-Category (Distribution only)
-function filterPOIsBySubCategory(subCategory, element) {
-    console.log('Filtering by sub-category:', subCategory);
-    
-    // Update active filter chip for sub-categories only
-    document.querySelectorAll('.sub-category-filters .filter-chip').forEach(chip => {
-        chip.classList.remove('active');
-    });
-    element.classList.add('active');
-    
-    // Update the active sub-category filter
-    activeSubCategoryFilter = subCategory;
-    
-    console.log('Active sub-category:', activeSubCategoryFilter);
-    
-    // Update the map with new filters
-    updateMap();
-}
-
-function showPerformanceReport() {
-    const modal = document.getElementById('reportModal');
-    const content = document.getElementById('modalContent');
-    
-    const excellent = distributors.filter(d => d.rating === 'Excellent');
-    const good = distributors.filter(d => d.rating === 'Good');
-    const average = distributors.filter(d => d.rating === 'Average');
-    const below = distributors.filter(d => d.rating === 'Below Average');
-    
-    // Classification breakdown
-    const classifications = {};
-    distributors.forEach(d => {
-        classifications[d.classification] = (classifications[d.classification] || 0) + 1;
-    });
-    
-    content.innerHTML = `
-        <div class="modal-header">📊 Distributor Performance Report</div>
-        <div class="report-section">
-            <div class="report-title">Performance Summary</div>
-            <table>
-                <tr><th>Level</th><th>Count</th><th>%</th><th>Sales</th></tr>
-                <tr><td>🌟 Excellent (90%+)</td><td>${excellent.length}</td><td>${(excellent.length/distributors.length*100).toFixed(1)}%</td><td>₹${(excellent.reduce((sum, d) => sum + d.sales, 0)/100000).toFixed(1)}L</td></tr>
-                <tr><td>✅ Good (75-90%)</td><td>${good.length}</td><td>${(good.length/distributors.length*100).toFixed(1)}%</td><td>₹${(good.reduce((sum, d) => sum + d.sales, 0)/100000).toFixed(1)}L</td></tr>
-                <tr><td>⚠️ Average (60-75%)</td><td>${average.length}</td><td>${(average.length/distributors.length*100).toFixed(1)}%</td><td>₹${(average.reduce((sum, d) => sum + d.sales, 0)/100000).toFixed(1)}L</td></tr>
-                <tr><td>❌ Below (<60%)</td><td>${below.length}</td><td>${(below.length/distributors.length*100).toFixed(1)}%</td><td>₹${(below.reduce((sum, d) => sum + d.sales, 0)/100000).toFixed(1)}L</td></tr>
-            </table>
-        </div>
-        
-        <div class="report-section">
-            <div class="report-title">Classification Breakdown</div>
-            <table>
-                <tr><th>Type</th><th>Count</th><th>% of Total</th></tr>
-                ${Object.entries(classifications).map(([type, count]) => `
-                    <tr><td>${type}</td><td>${count}</td><td>${(count/distributors.length*100).toFixed(1)}%</td></tr>
-                `).join('')}
-            </table>
-        </div>
-    `;
-    modal.classList.add('active');
-}
-
-function showCoverageGaps() {
-    if (pois.length === 0) {
-        alert('Please wait for POI data to load first.');
-        return;
-    }
-    
-    const wsNeeded = Math.ceil(pois.length / 150);
-    const investment = Math.ceil(wsNeeded * 0.6);
-    
-    alert(`🎯 Coverage Gap Analysis\n\nBased on ${pois.length.toLocaleString()} POIs:\n\n• ${wsNeeded}+ new distributors needed\n• Investment: ₹${investment} Crores\n• Expected ROI: 6-8 months\n\nTop priority areas identified for expansion.`);
-}
-
-function showNewWSPlan() {
-    alert('⭐ New WS Appointment Plan\n\n• High Priority: 50 locations\n• Medium Priority: 150 locations\n• Low Priority: 300 locations\n\nTotal investment: ₹300Cr\nProjected revenue: ₹150Cr/month');
-}
-
-function closeModal() {
-    document.getElementById('reportModal').classList.remove('active');
-}
-
-function exportPOIsByPlant() {
     if (pois.length === 0) {
         alert('No POI data available. Please wait for data to load.');
         return;
     }
-    
-    const plantKey = document.getElementById('plantSelect').value;
-    if (!plantKey) {
-        alert('Please select a plant first.');
-        return;
-    }
-    
-    const plant = plants[plantKey];
-    const radiusKM = currentRadius > 0 ? currentRadius : 150;
     
     const filteredPOIs = pois.filter(poi => {
         const distance = calculateDistance(poi.Latitude, poi.Longitude, plant.lat, plant.lng);
@@ -1595,241 +385,4 @@ function exportPOIsByPlant() {
     alert(`✅ Exported ${filteredPOIs.length.toLocaleString()} POIs from ${plant.name} within ${radiusKM} KM radius`);
 }
 
-function selectDistributorForPOIExport(index) {
-    selectedDistributorForExport = index;
-    const dist = distributors[index];
-    
-    const modal = document.getElementById('reportModal');
-    const content = document.getElementById('modalContent');
-    
-    content.innerHTML = `
-        <div class="modal-header">📍 Export POIs Around ${dist.name}</div>
-        <div class="report-section">
-            <div class="report-title">Select Export Radius</div>
-            <p style="margin-bottom: 15px;">Choose the radius around this distributor to export POIs:</p>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;">
-                <button class="action-btn" onclick="exportPOIsByDistributor(${index}, 10)">10 KM</button>
-                <button class="action-btn" onclick="exportPOIsByDistributor(${index}, 25)">25 KM</button>
-                <button class="action-btn" onclick="exportPOIsByDistributor(${index}, 50)">50 KM</button>
-                <button class="action-btn" onclick="exportPOIsByDistributor(${index}, 75)">75 KM</button>
-                <button class="action-btn" onclick="exportPOIsByDistributor(${index}, 100)">100 KM</button>
-                <button class="action-btn" onclick="exportPOIsByDistributor(${index}, 150)">150 KM</button>
-            </div>
-            <div style="margin-top: 20px;">
-                <label style="font-weight: 600; margin-bottom: 8px; display: block;">Custom Radius (KM):</label>
-                <div style="display: flex; gap: 10px;">
-                    <input type="number" id="distCustomRadius" min="1" max="500" placeholder="Enter radius" style="flex: 1; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px;">
-                    <button class="action-btn" style="flex: 0 0 auto; width: auto; padding: 10px 20px;" onclick="exportPOIsByDistributorCustom(${index})">Export</button>
-                </div>
-            </div>
-        </div>
-    `;
-    modal.classList.add('active');
-}
-
-function exportPOIsByDistributor(index, radiusKM) {
-    if (pois.length === 0) {
-        alert('No POI data available. Please wait for data to load.');
-        return;
-    }
-    
-    const dist = distributors[index];
-    
-    const filteredPOIs = pois.filter(poi => {
-        const distance = calculateDistance(poi.Latitude, poi.Longitude, dist.lat, dist.lng);
-        return distance <= radiusKM;
-    });
-    
-    if (filteredPOIs.length === 0) {
-        alert(`No POIs found within ${radiusKM} KM of ${dist.name}`);
-        return;
-    }
-    
-    const enrichedPOIs = filteredPOIs.map(poi => {
-        const distance = calculateDistance(poi.Latitude, poi.Longitude, dist.lat, dist.lng);
-        return {
-            Distributor_Name: dist.name,
-            Distributor_City: dist.city,
-            Distributor_Classification: dist.classification,
-            Distance_To_Distributor_KM: distance.toFixed(2),
-            ...poi
-        };
-    });
-    
-    exportPOIsToCSV(enrichedPOIs, `POIs_${dist.name.replace(/[^a-zA-Z0-9]/g, '_')}_${radiusKM}KM_${new Date().toISOString().split('T')[0]}.csv`);
-    closeModal();
-    alert(`✅ Exported ${filteredPOIs.length.toLocaleString()} POIs within ${radiusKM} KM of ${dist.name}`);
-}
-
-function exportPOIsByDistributorCustom(index) {
-    const radiusInput = document.getElementById('distCustomRadius');
-    const radiusKM = parseInt(radiusInput.value);
-    
-    if (isNaN(radiusKM) || radiusKM < 1 || radiusKM > 500) {
-        alert('Please enter a valid radius between 1 and 500 KM');
-        return;
-    }
-    
-    exportPOIsByDistributor(index, radiusKM);
-}
-
-function exportDistributors() {
-    let csv = 'Name,City,Classification,Retailers,Achievement_%,Rating,Sales,Target,TSM,Nearest_Plant,Distance_To_Plant_KM\n';
-    distributors.forEach(d => {
-        const nearestPlant = findNearestPlant(d.lat, d.lng);
-        csv += `"${d.name}","${d.city}","${d.classification}",${d.retailers},${d.achievement.toFixed(2)},"${d.rating}",${d.sales},${d.target},"${d.tsm}","${nearestPlant.name}",${nearestPlant.distance.toFixed(2)}\n`;
-    });
-    downloadCSV(csv, 'distributors_with_classification.csv');
-}
-
-function populateDistributorDropdown() {
-    const select = document.getElementById('distributorSelect');
-    
-    while (select.options.length > 1) {
-        select.remove(1);
-    }
-    
-    const sortedDistributors = [...distributors].sort((a, b) => a.name.localeCompare(b.name));
-    
-    sortedDistributors.forEach((dist, originalIndex) => {
-        const option = document.createElement('option');
-        option.value = dist.index;
-        option.textContent = `${dist.name} (${dist.city})`;
-        select.appendChild(option);
-    });
-}
-
-function updateDistributorExportInfo() {
-    const select = document.getElementById('distributorSelect');
-    const infoDiv = document.getElementById('distExportInfo');
-    const infoText = document.getElementById('distInfoText');
-    
-    if (select.value) {
-        const distIndex = parseInt(select.value);
-        const dist = distributors[distIndex];
-        const coverageRadius = parseInt(document.getElementById('coverageRadius').value) || 25;
-        
-        infoText.innerHTML = `
-            <div style="margin-bottom: 3px;">${dist.name}</div>
-            <div style="font-size: 11px; color: #666;">${dist.city} • ${dist.classification} • ${coverageRadius} KM radius</div>
-        `;
-        infoDiv.style.display = 'block';
-    } else {
-        infoDiv.style.display = 'none';
-    }
-}
-
-function exportPOIsBySelectedDistributor() {
-    const select = document.getElementById('distributorSelect');
-    
-    if (!select.value) {
-        alert('Please select a distributor first.');
-        return;
-    }
-    
-    if (pois.length === 0) {
-        alert('No POI data available. Please wait for data to load.');
-        return;
-    }
-    
-    const distIndex = parseInt(select.value);
-    const coverageRadius = parseInt(document.getElementById('coverageRadius').value) || 25;
-    
-    exportPOIsByDistributor(distIndex, coverageRadius);
-}
-
-function exportPOIs() {
-    if (pois.length === 0) {
-        alert('No POI data available to export. Please wait for data to load.');
-        return;
-    }
-    
-    exportPOIsToCSV(pois, `all_pois_export_${new Date().toISOString().split('T')[0]}.csv`);
-    alert(`✅ Exported all ${pois.length.toLocaleString()} POIs`);
-}
-
-function exportPOIsToCSV(poisArray, filename) {
-    if (poisArray.length === 0) {
-        alert('No POIs to export');
-        return;
-    }
-    
-    const allHeaders = new Set();
-    poisArray.forEach(poi => {
-        Object.keys(poi).forEach(key => allHeaders.add(key));
-    });
-    
-    const headers = Array.from(allHeaders);
-    
-    let csv = headers.map(h => `"${h}"`).join(',') + '\n';
-    
-    poisArray.forEach(poi => {
-        const row = headers.map(h => {
-            const val = poi[h] !== undefined ? poi[h] : '';
-            const strVal = String(val);
-            if (strVal.includes(',') || strVal.includes('"') || strVal.includes('\n')) {
-                return `"${strVal.replace(/"/g, '""')}"`;
-            }
-            return strVal;
-        });
-        csv += row.join(',') + '\n';
-    });
-    
-    downloadCSV(csv, filename);
-}
-
-function downloadCSV(csv, filename) {
-    const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-}
-
-// Simple multiple category selection
-let selectedCats = new Set();
-
-function handleCategoryCheck() {
-    selectedCats.clear();
-    
-    // Get checked categories
-    document.querySelectorAll('.cat-check input:checked').forEach(cb => {
-        selectedCats.add(cb.value);
-    });
-    
-    // Update visual style
-    document.querySelectorAll('.cat-check').forEach(label => {
-        const cb = label.querySelector('input');
-        if (cb.checked) {
-            label.style.background = '#667eea';
-            label.style.color = 'white';
-            label.style.borderColor = '#667eea';
-        } else {
-            label.style.background = 'white';
-            label.style.color = 'black';
-            label.style.borderColor = '#ddd';
-        }
-    });
-    
-    // Show/hide Distribution subcategories
-    const subDiv = document.getElementById('distributionSubFilters');
-    if (subDiv) {
-        subDiv.style.display = selectedCats.has('Distribution') ? 'block' : 'none';
-    }
-    
-    // Filter POIs
-    if (selectedCats.size === 0) {
-        activeCategoryFilter = 'all';
-    } else {
-        activeCategoryFilter = Array.from(selectedCats).join(',');
-    }
-    
-    updateMap();
-}
-
-console.log('✅ Multiple category checkboxes ready');
-
+console.log('✅ Updated plants configuration loaded: Ramanagara & Kunigal');
