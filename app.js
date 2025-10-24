@@ -929,6 +929,27 @@ async function parsePOIData(csvText, fileName) {
             
             poi.Latitude = lat;
             poi.Longitude = lng;
+            
+            // Map Ramanagara CSV columns to expected field names
+            poi.Business_Name = poi.name || poi.Business_Name || 'Unknown Business';
+            poi.POI_ID = poi.business_id || poi.place_id || poi.POI_ID || `POI_${validCount}`;
+            poi.Category = poi.business_category || poi.Category || 'Retail';
+            poi.Sub_Category = poi.channel || poi.Sub_Category || 'general';
+            poi.City = poi.address ? (poi.address.split(',')[1] || '').trim() : (poi.City || 'Karnataka');
+            poi.Address = poi.address || poi.Address || '';
+            poi.Rating = parseFloat(poi.rating || poi.Rating || 0);
+            poi.Reviews = parseInt(poi.user_ratings_total || poi.Reviews || 0);
+            poi.Monthly_Requirement_Liters = parseInt(poi.estimated_monthly_water_liters || poi.Monthly_Requirement_Liters || 0);
+            poi.Monthly_Revenue_Potential = parseInt(poi.estimated_monthly_water_revenue || poi.Monthly_Revenue_Potential || 0);
+            poi.Priority_Score = parseFloat(poi.priority_score || poi.Priority_Score || 5);
+            poi.Is_Wholesaler = poi.is_wholesaler || poi.Is_Wholesaler || 'No';
+            poi.Is_Chain = poi.is_chain || poi.Is_Chain || 'No';
+            poi.Nearest_Plant = poi.nearest_plant || poi.Nearest_Plant || 'Ramanagara Plant';
+            poi.Distance_To_Plant_KM = parseFloat(poi.distance_from_plant_km || poi.Distance_To_Plant_KM || 0);
+            poi.Priority = poi.water_priority >= 8 ? 'High' : poi.water_priority >= 5 ? 'Medium' : 'Low';
+            poi.Water_Consumption = poi.estimated_monthly_water_liters >= 3000 ? 'High' : 
+                                   poi.estimated_monthly_water_liters >= 1500 ? 'Medium' : 'Low';
+            
             pois.push(poi);
             validCount++;
             
@@ -1288,11 +1309,28 @@ function updateMap() {
                     <span style="font-size: 11px; color: #667eea;">${formatNumber(poi.Monthly_Requirement_Liters)} L/month</span>
                 </div>
             `;
+            
+            // Show tooltip on hover
             marker.bindTooltip(tooltipContent, {
-                permanent: false,
+                permanent: false,  // Set to true to show names always
                 direction: 'top',
                 offset: [0, -5]
             });
+            
+            // Show name label for high-priority businesses
+            if (poi.Priority === 'High' || poi.Is_Wholesaler === 'Yes') {
+                const nameLabel = L.tooltip({
+                    permanent: true,
+                    direction: 'right',
+                    className: 'poi-name-label',
+                    offset: [8, 0]
+                })
+                .setContent(`<span style="font-size: 10px; font-weight: 600; color: #333; background: white; padding: 2px 6px; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">${poi.Business_Name}</span>`)
+                .setLatLng([poi.Latitude, poi.Longitude])
+                .addTo(map);
+                
+                mapMarkers.push(nameLabel);
+            }
             
             mapMarkers.push(marker);
         });
