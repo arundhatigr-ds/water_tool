@@ -655,36 +655,74 @@
 
                 <div class="tab-content" id="expansion-tab">
                     <div class="control-section">
-                        <div class="section-title">POI Category Filters</div>
+                        <div class="section-title">🏪 POI Category Filters</div>
                         <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
-                            <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check">
-                                <input type="checkbox" value="Distribution" onchange="handleCategoryCheck()" style="margin-right: 6px;">
-                                Distribution
-                            </label>
+                            <!-- Retail -->
                             <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check">
                                 <input type="checkbox" value="Retail" onchange="handleCategoryCheck()" style="margin-right: 6px;">
-                                Retail
+                                🛒 Retail
                             </label>
+                            <!-- HoReCa -->
                             <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check">
-                                <input type="checkbox" value="Food & Beverage" onchange="handleCategoryCheck()" style="margin-right: 6px;">
-                                F&B
+                                <input type="checkbox" value="HoReCa" onchange="handleCategoryCheck()" style="margin-right: 6px;">
+                                🍽️ HoReCa
                             </label>
+                            <!-- Services -->
                             <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check">
-                                <input type="checkbox" value="Hospitality" onchange="handleCategoryCheck()" style="margin-right: 6px;">
-                                Hospitality
+                                <input type="checkbox" value="Services" onchange="handleCategoryCheck()" style="margin-right: 6px;">
+                                💇 Services
                             </label>
+                            <!-- Institutional -->
                             <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check">
-                                <input type="checkbox" value="Corporate" onchange="handleCategoryCheck()" style="margin-right: 6px;">
-                                Corporate
+                                <input type="checkbox" value="Institutional" onchange="handleCategoryCheck()" style="margin-right: 6px;">
+                                🏥 Institutional
                             </label>
+                            <!-- Entertainment -->
                             <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check">
-                                <input type="checkbox" value="Healthcare" onchange="handleCategoryCheck()" style="margin-right: 6px;">
-                                Healthcare
+                                <input type="checkbox" value="Entertainment" onchange="handleCategoryCheck()" style="margin-right: 6px;">
+                                🎬 Entertainment
                             </label>
                         </div>
                         
-                        <!-- Sub-category filters for Distribution -->
-                        <div class="sub-category-filters" id="distributionSubFilters">
+                        <!-- Sub-category filters for Retail -->
+                        <div class="sub-category-filters" id="retailSubFilters" style="display: none;">
+                            <div class="sub-category-title">🛒 Retail Types</div>
+                            <button class="filter-chip active" onclick="filterPOIsBySubCategory('all', this)">All Retail</button>
+                            <button class="filter-chip" onclick="filterPOIsBySubCategory('store', this)">Store</button>
+                            <button class="filter-chip" onclick="filterPOIsBySubCategory('supermarket', this)">Supermarket</button>
+                            <button class="filter-chip" onclick="filterPOIsBySubCategory('convenience_store', this)">Convenience</button>
+                            <button class="filter-chip" onclick="filterPOIsBySubCategory('shopping_mall', this)">Mall</button>
+                            <button class="filter-chip" onclick="filterPOIsBySubCategory('liquor_store', this)">Liquor</button>
+                            <button class="filter-chip" onclick="filterPOIsBySubCategory('electronics_store', this)">Electronics</button>
+                            <button class="filter-chip" onclick="filterPOIsBySubCategory('pharmacy', this)">Pharmacy</button>
+                            <button class="filter-chip" onclick="filterPOIsBySubCategory('bakery', this)">Bakery</button>
+                        </div>
+                        
+                        <!-- Sub-category filters for HoReCa -->
+                        <div class="sub-category-filters" id="horecaSubFilters" style="display: none;">
+                            <div class="sub-category-title">🍽️ HoReCa Types</div>
+                            <button class="filter-chip active" onclick="filterPOIsBySubCategory('all', this)">All HoReCa</button>
+                            <button class="filter-chip" onclick="filterPOIsBySubCategory('restaurant', this)">Restaurant</button>
+                            <button class="filter-chip" onclick="filterPOIsBySubCategory('hotel', this)">Hotel</button>
+                            <button class="filter-chip" onclick="filterPOIsBySubCategory('cafe', this)">Cafe</button>
+                            <button class="filter-chip" onclick="filterPOIsBySubCategory('bar', this)">Bar</button>
+                            <button class="filter-chip" onclick="filterPOIsBySubCategory('meal_takeaway', this)">Takeaway</button>
+                            <button class="filter-chip" onclick="filterPOIsBySubCategory('lodging', this)">Lodging</button>
+                        </div>
+                        
+                        <!-- Sub-category filters for Services -->
+                        <div class="sub-category-filters" id="servicesSubFilters" style="display: none;">
+                            <div class="sub-category-title">💇 Service Types</div>
+                            <button class="filter-chip active" onclick="filterPOIsBySubCategory('all', this)">All Services</button>
+                            <button class="filter-chip" onclick="filterPOIsBySubCategory('beauty_salon', this)">Beauty Salon</button>
+                            <button class="filter-chip" onclick="filterPOIsBySubCategory('hair_care', this)">Hair Care</button>
+                            <button class="filter-chip" onclick="filterPOIsBySubCategory('car_wash', this)">Car Wash</button>
+                            <button class="filter-chip" onclick="filterPOIsBySubCategory('gym', this)">Gym</button>
+                            <button class="filter-chip" onclick="filterPOIsBySubCategory('spa', this)">Spa</button>
+                        </div>
+                        
+                        <!-- Keep old Distribution subcategories hidden for compatibility -->
+                        <div class="sub-category-filters" id="distributionSubFilters" style="display: none;">
                             <div class="sub-category-title">📦 Distribution Sub-Categories</div>
                             <button class="filter-chip active" onclick="filterPOIsBySubCategory('all', this)">All Distribution</button>
                             <button class="filter-chip" onclick="filterPOIsBySubCategory('Bulk Supplier', this)">Bulk Supplier</button>
