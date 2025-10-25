@@ -68,6 +68,37 @@ const plants = {
     }
 };
 
+
+// ============================================================
+// UPDATE DISTRIBUTORS TABLE
+// ============================================================
+function updateDistributorsTable() {
+    const tbody = document.getElementById('distributorsTableBody');
+    if (!tbody) return;
+    
+    let html = '';
+    distributorsData.forEach((dist, index) => {
+        html += `
+            <tr style="cursor: pointer;" onclick="focusOnDistributor(${index})">
+                <td>${dist.name}</td>
+                <td>${dist.city}</td>
+                <td>${dist.retailers}</td>
+                <td>${dist.tsm || 'Not Assigned'}</td>
+                <td>${dist.classification}</td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+    console.log('✅ Distributors table updated');
+}
+
+function focusOnDistributor(index) {
+    const dist = distributorsData[index];
+    map.setView([dist.lat, dist.lng], 14);
+    alert(`📍 ${dist.name}\n${dist.city}\nRetailers: ${dist.retailers}\nTSM: ${dist.tsm}`);
+}
+
 // Global variables
 let map, currentRadius = 50;
 let activeCategoryFilter = 'all';
@@ -1509,3 +1540,157 @@ function handleCategoryCheck() {
 }
 
 console.log('✅ Multiple category checkboxes ready');
+
+
+
+// ============================================================
+// CLUSTER ALLOCATION SYSTEM - Kunigal & Harohalli
+// ============================================================
+
+const CLUSTERS = {
+    kunigal: [
+        { name: 'Cluster 1 - Kunigal Central', center: [12.996663, 76.982185], radius: 5 },
+        { name: 'Cluster 2 - Kunigal North', center: [13.05, 76.98], radius: 5 },
+        { name: 'Cluster 3 - Kunigal South', center: [12.94, 76.98], radius: 5 },
+        { name: 'Cluster 4 - Kunigal East', center: [13.00, 77.05], radius: 5 },
+        { name: 'Cluster 5 - Kunigal West', center: [13.00, 76.90], radius: 5 },
+        { name: 'Cluster 6 - Tumkur Link', center: [13.34, 77.10], radius: 8 },
+        { name: 'Cluster 7 - Tiptur', center: [13.25, 76.48], radius: 10 },
+        { name: 'Cluster 8 - Sira', center: [13.74, 76.90], radius: 10 }
+    ],
+    harohalli: [
+        { name: 'Cluster 9 - Harohalli Central', center: [12.6795383, 77.4425475], radius: 5 },
+        { name: 'Cluster 10 - Harohalli North', center: [12.73, 77.44], radius: 5 },
+        { name: 'Cluster 11 - Harohalli South', center: [12.63, 77.44], radius: 5 },
+        { name: 'Cluster 12 - Ramanagara', center: [12.72, 77.28], radius: 10 },
+        { name: 'Cluster 13 - Kanakapura', center: [12.55, 77.42], radius: 10 },
+        { name: 'Cluster 14 - Channapatna', center: [12.65, 77.20], radius: 10 },
+        { name: 'Cluster 15 - Bidadi', center: [12.80, 77.38], radius: 8 },
+        { name: 'Cluster 16 - Bangalore South', center: [12.85, 77.58], radius: 10 },
+        { name: 'Cluster 17 - Bangalore SW', center: [12.90, 77.50], radius: 8 },
+        { name: 'Cluster 18 - Bangalore West', center: [12.98, 77.50], radius: 8 },
+        { name: 'Cluster 19 - Bangalore NW', center: [13.05, 77.52], radius: 8 },
+        { name: 'Cluster 20 - Bangalore Central', center: [12.97, 77.59], radius: 8 },
+        { name: 'Cluster 21 - Anekal', center: [12.71, 77.70], radius: 10 },
+        { name: 'Cluster 22 - Electronic City', center: [12.84, 77.66], radius: 8 }
+    ]
+};
+
+function getAllClusters() {
+    return [...CLUSTERS.kunigal, ...CLUSTERS.harohalli];
+}
+
+function assignPOIsToClusters() {
+    const allClusters = getAllClusters();
+    const assignments = {};
+    
+    allClusters.forEach(cluster => {
+        assignments[cluster.name] = {
+            ...cluster,
+            pois: [],
+            count: 0
+        };
+    });
+    
+    // Assign each POI to nearest cluster
+    pois.forEach(poi => {
+        let nearestCluster = null;
+        let minDistance = Infinity;
+        
+        allClusters.forEach(cluster => {
+            const distance = calculateDistance(
+                poi.latitude, poi.longitude,
+                cluster.center[0], cluster.center[1]
+            );
+            
+            if (distance < minDistance && distance <= cluster.radius) {
+                minDistance = distance;
+                nearestCluster = cluster.name;
+            }
+        });
+        
+        if (nearestCluster) {
+            assignments[nearestCluster].pois.push(poi);
+            assignments[nearestCluster].count++;
+        }
+    });
+    
+    return assignments;
+}
+
+function showClusterAllocation() {
+    const assignments = assignPOIsToClusters();
+    
+    let report = '<h2>📊 Cluster Allocation Report</h2>';
+    report += '<div style="max-height: 500px; overflow-y: auto;">';
+    
+    // Kunigal Clusters
+    report += '<h3 style="color: #ff6b6b;">🏭 Kunigal Plant Clusters</h3>';
+    CLUSTERS.kunigal.forEach(cluster => {
+        const assignment = assignments[cluster.name];
+        report += `
+            <div style="background: #fff; padding: 12px; margin: 8px 0; border-left: 4px solid #ff6b6b; border-radius: 6px;">
+                <div style="font-weight: 600; margin-bottom: 4px;">${cluster.name}</div>
+                <div style="font-size: 13px; color: #666;">
+                    POIs: <strong>${assignment.count.toLocaleString()}</strong> | 
+                    Radius: ${cluster.radius} KM
+                </div>
+            </div>
+        `;
+    });
+    
+    // Harohalli Clusters
+    report += '<h3 style="color: #4facfe; margin-top: 20px;">🏭 Harohalli Plant Clusters</h3>';
+    CLUSTERS.harohalli.forEach(cluster => {
+        const assignment = assignments[cluster.name];
+        report += `
+            <div style="background: #fff; padding: 12px; margin: 8px 0; border-left: 4px solid #4facfe; border-radius: 6px;">
+                <div style="font-weight: 600; margin-bottom: 4px;">${cluster.name}</div>
+                <div style="font-size: 13px; color: #666;">
+                    POIs: <strong>${assignment.count.toLocaleString()}</strong> | 
+                    Radius: ${cluster.radius} KM
+                </div>
+            </div>
+        `;
+    });
+    
+    report += '</div>';
+    report += `<button class="action-btn" onclick="exportClusterAllocations()" style="margin-top: 15px;">📥 Export Cluster Allocations</button>`;
+    
+    document.getElementById('modalContent').innerHTML = report;
+    document.getElementById('reportModal').style.display = 'flex';
+}
+
+function exportClusterAllocations() {
+    const assignments = assignPOIsToClusters();
+    
+    let csv = 'Cluster Name,Plant,Center Lat,Center Lng,Radius KM,POI Count,POI IDs\n';
+    
+    Object.values(assignments).forEach(cluster => {
+        const plant = cluster.name.includes('Kunigal') || CLUSTERS.kunigal.some(c => c.name === cluster.name) ? 'Kunigal' : 'Harohalli';
+        const poiIds = cluster.pois.map(p => p.business_id || p.name).join(';');
+        csv += `"${cluster.name}","${plant}",${cluster.center[0]},${cluster.center[1]},${cluster.radius},${cluster.count},"${poiIds}"\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cluster_allocations_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    
+    alert(`✅ Exported ${Object.keys(assignments).length} cluster allocations!`);
+}
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Earth radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
+console.log('✅ Cluster allocation system loaded - 22 clusters (8 Kunigal + 14 Harohalli)');
