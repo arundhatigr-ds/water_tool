@@ -1695,6 +1695,242 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 console.log('✅ Cluster allocation system loaded - 22 clusters (8 Kunigal + 14 Harohalli)');
 
+// ============================================================
+// INTERACTIVE CLUSTER VISUALIZATION ON MAP
+// ============================================================
+
+let clusterLayers = [];
+let clusterCirclesVisible = false;
+
+function showClustersOnMap() {
+    console.log('🗺️ Drawing clusters on map...');
+    
+    // Clear existing cluster layers
+    clearClustersFromMap();
+    
+    const allClusters = getAllClusters();
+    
+    allClusters.forEach((cluster, index) => {
+        const isKunigal = index < 8;
+        const color = isKunigal ? '#ff6b6b' : '#4facfe';
+        
+        // Create circle for cluster
+        const circle = L.circle(cluster.center, {
+            radius: cluster.radius * 1000, // Convert KM to meters
+            color: color,
+            fillColor: color,
+            fillOpacity: 0.1,
+            weight: 2,
+            opacity: 0.6
+        }).addTo(map);
+        
+        // Count POIs in this cluster
+        const poisInCluster = pois.filter(poi => {
+            const distance = calculateDistance(
+                poi.latitude, poi.longitude,
+                cluster.center[0], cluster.center[1]
+            );
+            return distance <= cluster.radius;
+        });
+        
+        // Create popup content
+        const popupContent = `
+            <div style="min-width: 200px;">
+                <h3 style="margin: 0 0 10px 0; color: ${color}; font-size: 14px;">
+                    ${cluster.name}
+                </h3>
+                <div style="font-size: 12px; margin-bottom: 8px;">
+                    📍 Radius: <strong>${cluster.radius} KM</strong><br>
+                    📊 POIs: <strong>${poisInCluster.length.toLocaleString()}</strong>
+                </div>
+                <button onclick="viewClusterPOIs('${cluster.name.replace(/'/g, "\'")}')" 
+                        style="width: 100%; padding: 6px; background: ${color}; color: white; 
+                               border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                    📋 View POIs in this Cluster
+                </button>
+            </div>
+        `;
+        
+        circle.bindPopup(popupContent);
+        
+        // Add click handler
+        circle.on('click', function() {
+            map.fitBounds(circle.getBounds());
+        });
+        
+        // Add label marker at center
+        const label = L.marker(cluster.center, {
+            icon: L.divIcon({
+                className: 'cluster-label',
+                html: `<div style="background: ${color}; color: white; padding: 4px 8px; 
+                              border-radius: 12px; font-size: 11px; font-weight: bold; 
+                              white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                          ${cluster.name.replace('Cluster ', 'C')}
+                       </div>`,
+                iconSize: null
+            })
+        }).addTo(map);
+        
+        label.bindPopup(popupContent);
+        
+        clusterLayers.push(circle);
+        clusterLayers.push(label);
+    });
+    
+    clusterCirclesVisible = true;
+    console.log(`✅ Drew ${allClusters.length} cluster circles on map`);
+}
+
+function clearClustersFromMap() {
+    clusterLayers.forEach(layer => {
+        map.removeLayer(layer);
+    });
+    clusterLayers = [];
+    clusterCirclesVisible = false;
+}
+
+function toggleClustersOnMap() {
+    if (clusterCirclesVisible) {
+        clearClustersFromMap();
+    } else {
+        showClustersOnMap();
+    }
+}
+
+function viewClusterPOIs(clusterName) {
+    console.log(`📋 Viewing POIs for ${clusterName}`);
+    
+    const allClusters = getAllClusters();
+    const cluster = allClusters.find(c => c.name === clusterName);
+    
+    if (!cluster) {
+        alert('❌ Cluster not found');
+        return;
+    }
+    
+    // Find all POIs in this cluster
+    const poisInCluster = pois.filter(poi => {
+        const distance = calculateDistance(
+            poi.latitude, poi.longitude,
+            cluster.center[0], cluster.center[1]
+        );
+        return distance <= cluster.radius;
+    });
+    
+    // Create detailed view
+    let html = `
+        <div style="max-height: 500px; overflow-y: auto;">
+            <h2 style="color: ${cluster.center[0] < 13 ? '#4facfe' : '#ff6b6b'}; margin-bottom: 10px;">
+                ${clusterName}
+            </h2>
+            
+            <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                <div style="font-size: 13px;">
+                    📍 <strong>Center:</strong> ${cluster.center[0].toFixed(4)}, ${cluster.center[1].toFixed(4)}<br>
+                    📏 <strong>Radius:</strong> ${cluster.radius} KM<br>
+                    📊 <strong>Total POIs:</strong> ${poisInCluster.length.toLocaleString()}
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <strong>POI Breakdown by Category:</strong>
+            </div>
+    `;
+    
+    // Group by category
+    const byCategory = {};
+    poisInCluster.forEach(poi => {
+        const cat = poi.business_category || 'Unknown';
+        byCategory[cat] = (byCategory[cat] || 0) + 1;
+    });
+    
+    Object.entries(byCategory).sort((a, b) => b[1] - a[1]).forEach(([cat, count]) => {
+        const percentage = (count / poisInCluster.length * 100).toFixed(1);
+        html += `
+            <div style="background: white; padding: 10px; margin-bottom: 8px; border-left: 4px solid #667eea; border-radius: 4px;">
+                <strong>${cat}</strong>: ${count.toLocaleString()} POIs (${percentage}%)
+            </div>
+        `;
+    });
+    
+    html += `
+        <div style="margin-top: 20px;">
+            <button class="action-btn" onclick="exportClusterPOIsDetail('${clusterName.replace(/'/g, "\'")}')">
+                📥 Export ${clusterName} POIs (CSV)
+            </button>
+        </div>
+        
+        <div style="margin-top: 15px;">
+            <button class="action-btn" onclick="zoomToCluster('${clusterName.replace(/'/g, "\'")}'); closeModal();" style="background: #28a745;">
+                🗺️ Zoom to Cluster on Map
+            </button>
+        </div>
+    `;
+    
+    html += '</div>';
+    
+    document.getElementById('modalContent').innerHTML = html;
+    document.getElementById('reportModal').style.display = 'flex';
+}
+
+function zoomToCluster(clusterName) {
+    const allClusters = getAllClusters();
+    const cluster = allClusters.find(c => c.name === clusterName);
+    
+    if (!cluster) return;
+    
+    // Calculate bounds
+    const radiusInDegrees = cluster.radius / 111; // Rough conversion
+    const bounds = [
+        [cluster.center[0] - radiusInDegrees, cluster.center[1] - radiusInDegrees],
+        [cluster.center[0] + radiusInDegrees, cluster.center[1] + radiusInDegrees]
+    ];
+    
+    map.fitBounds(bounds);
+    
+    // Show cluster circles if not already showing
+    if (!clusterCirclesVisible) {
+        showClustersOnMap();
+    }
+}
+
+function exportClusterPOIsDetail(clusterName) {
+    const allClusters = getAllClusters();
+    const cluster = allClusters.find(c => c.name === clusterName);
+    
+    if (!cluster) {
+        alert('❌ Cluster not found');
+        return;
+    }
+    
+    const poisInCluster = pois.filter(poi => {
+        const distance = calculateDistance(
+            poi.latitude, poi.longitude,
+            cluster.center[0], cluster.center[1]
+        );
+        return distance <= cluster.radius;
+    });
+    
+    let csv = 'Cluster,Business ID,Name,Category,Phone,Address,Latitude,Longitude,Plant,Sales Officer,Google Maps Link\n';
+    
+    poisInCluster.forEach(poi => {
+        const mapsLink = `https://www.google.com/maps?q=${poi.latitude},${poi.longitude}`;
+        csv += `"${clusterName}","${poi.business_id || ''}","${poi.name || ''}","${poi.business_category || ''}","${poi.phone_number || ''}","${(poi.address || '').replace(/"/g, '""')}",${poi.latitude},${poi.longitude},"${poi.plant || ''}","${poi.sales_officer || ''}","${mapsLink}"\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${clusterName.replace(/ /g, '_')}_POIs_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    
+    alert(`✅ Exported ${poisInCluster.length.toLocaleString()} POIs from ${clusterName}!`);
+}
+
+console.log('✅ Interactive cluster visualization loaded');
+
+
 
 // ============================================================
 // AUTO-DETECT CATEGORIES FROM POI DATA
@@ -1764,3 +2000,126 @@ function detectAndCreateCategoryFilters() {
     
     console.log(`✅ Category filters updated with ${categories.length} actual categories from data`);
 }
+
+
+
+// ============================================================
+// FIX POI DISPLAY ON MAP
+// ============================================================
+
+function displayPOIsOnMap() {
+    console.log('🗺️ Displaying POIs on map...');
+    
+    // Clear existing POI markers
+    if (window.poiMarkers) {
+        window.poiMarkers.forEach(marker => map.removeLayer(marker));
+    }
+    window.poiMarkers = [];
+    
+    // Check if we should show POIs
+    const showPOIsCheckbox = document.getElementById('showPOIs');
+    if (showPOIsCheckbox && !showPOIsCheckbox.checked) {
+        console.log('POIs hidden by user');
+        return;
+    }
+    
+    if (!pois || pois.length === 0) {
+        console.log('⚠️ No POIs to display');
+        return;
+    }
+    
+    console.log(`Displaying ${pois.length.toLocaleString()} POIs...`);
+    
+    // Get active category filter if any
+    let activeCategories = [];
+    const categoryCheckboxes = document.querySelectorAll('input[type="checkbox"][value]');
+    categoryCheckboxes.forEach(checkbox => {
+        if (checkbox.checked && checkbox.value) {
+            activeCategories.push(checkbox.value);
+        }
+    });
+    
+    // Filter POIs if category filter active
+    let displayPOIs = pois;
+    if (activeCategories.length > 0) {
+        displayPOIs = pois.filter(poi => 
+            activeCategories.includes(poi.business_category)
+        );
+        console.log(`Filtered to ${displayPOIs.length} POIs by category`);
+    }
+    
+    // Limit POIs if too many (for performance)
+    const maxPOIsToShow = 5000;
+    if (displayPOIs.length > maxPOIsToShow) {
+        console.log(`⚠️ Too many POIs (${displayPOIs.length}). Showing first ${maxPOIsToShow}`);
+        displayPOIs = displayPOIs.slice(0, maxPOIsToShow);
+    }
+    
+    // Create markers for each POI
+    displayPOIs.forEach((poi, index) => {
+        if (!poi.latitude || !poi.longitude) return;
+        
+        // Color by category
+        let color = '#667eea';
+        if (poi.business_category === 'Retail') color = '#4CAF50';
+        else if (poi.business_category === 'HoReCa') color = '#FF9800';
+        else if (poi.business_category === 'Institutional') color = '#2196F3';
+        else if (poi.business_category === 'Services') color = '#9C27B0';
+        else if (poi.business_category === 'Entertainment') color = '#E91E63';
+        
+        const marker = L.circleMarker([poi.latitude, poi.longitude], {
+            radius: 4,
+            fillColor: color,
+            color: '#fff',
+            weight: 1,
+            opacity: 0.8,
+            fillOpacity: 0.6
+        });
+        
+        // Create popup
+        const mapsLink = `https://www.google.com/maps?q=${poi.latitude},${poi.longitude}`;
+        const popupContent = `
+            <div style="min-width: 200px;">
+                <h4 style="margin: 0 0 8px 0; color: ${color};">${poi.name || 'Unknown'}</h4>
+                <div style="font-size: 12px;">
+                    <strong>Category:</strong> ${poi.business_category || 'N/A'}<br>
+                    <strong>Phone:</strong> ${poi.phone_number || 'N/A'}<br>
+                    <strong>Address:</strong> ${poi.address || 'N/A'}<br>
+                    <strong>Plant:</strong> ${poi.plant || 'N/A'}<br>
+                    <strong>Cluster:</strong> ${poi.cluster || 'N/A'}<br>
+                    <strong>Officer:</strong> ${poi.sales_officer || 'N/A'}
+                </div>
+                <a href="${mapsLink}" target="_blank" style="display: inline-block; margin-top: 8px; padding: 4px 8px; background: ${color}; color: white; text-decoration: none; border-radius: 4px; font-size: 11px;">
+                    📍 Open in Google Maps
+                </a>
+            </div>
+        `;
+        
+        marker.bindPopup(popupContent);
+        marker.addTo(map);
+        window.poiMarkers.push(marker);
+    });
+    
+    console.log(`✅ Displayed ${displayPOIs.length.toLocaleString()} POI markers on map`);
+}
+
+// Override updateMap to include POI display
+const originalUpdateMap = typeof updateMap !== 'undefined' ? updateMap : function() {};
+
+function updateMap() {
+    console.log('🔄 Updating map...');
+    
+    // Call original updateMap if it exists
+    if (typeof originalUpdateMap === 'function') {
+        try {
+            originalUpdateMap();
+        } catch (e) {
+            console.log('Note: original updateMap had an issue:', e.message);
+        }
+    }
+    
+    // Always display POIs
+    displayPOIsOnMap();
+}
+
+console.log('✅ POI display functions loaded');
