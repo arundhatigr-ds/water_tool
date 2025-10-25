@@ -1694,3 +1694,73 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 console.log('✅ Cluster allocation system loaded - 22 clusters (8 Kunigal + 14 Harohalli)');
+
+
+// ============================================================
+// AUTO-DETECT CATEGORIES FROM POI DATA
+// ============================================================
+function detectAndCreateCategoryFilters() {
+    console.log('🔍 Detecting categories from POI data...');
+    
+    // Get unique categories
+    const categoriesSet = new Set();
+    pois.forEach(poi => {
+        if (poi.business_category) {
+            categoriesSet.add(poi.business_category);
+        }
+    });
+    
+    const categories = Array.from(categoriesSet).sort();
+    console.log(`✅ Found ${categories.length} unique categories:`, categories);
+    
+    // Find the Expansion tab (where category filters are)
+    const expansionTab = document.getElementById('expansion-tab');
+    if (!expansionTab) {
+        console.log('⚠️  Expansion tab not found');
+        return;
+    }
+    
+    // Find the category filters container
+    const sectionTitles = expansionTab.querySelectorAll('.section-title');
+    let filterContainer = null;
+    
+    for (let title of sectionTitles) {
+        if (title.textContent.includes('POI Category Filters')) {
+            filterContainer = title.nextElementSibling;
+            break;
+        }
+    }
+    
+    if (!filterContainer) {
+        console.log('⚠️  Category filters container not found');
+        return;
+    }
+    
+    // Clear existing checkboxes
+    filterContainer.innerHTML = '';
+    
+    // Create checkbox for each category
+    categories.forEach(category => {
+        const label = document.createElement('label');
+        label.style.cssText = 'display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;';
+        label.className = 'cat-check';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.value = category;
+        checkbox.style.marginRight = '6px';
+        checkbox.onchange = handleCategoryCheck;
+        
+        // Shorten display name if too long
+        let displayName = category;
+        if (category.length > 25) {
+            displayName = category.substring(0, 22) + '...';
+        }
+        
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(displayName));
+        filterContainer.appendChild(label);
+    });
+    
+    console.log(`✅ Category filters updated with ${categories.length} actual categories from data`);
+}
