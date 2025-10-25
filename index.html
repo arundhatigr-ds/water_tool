@@ -667,41 +667,26 @@
                     <div class="control-section">
                         <div class="section-title">POI Category Filters</div>
                         <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
-                            <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check">
-                                <input type="checkbox" value="Distribution" onchange="handleCategoryCheck()" style="margin-right: 6px;">
-                                Distribution
-                            </label>
-                            <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check">
+                            <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check" title="9,200 POIs">
                                 <input type="checkbox" value="Retail" onchange="handleCategoryCheck()" style="margin-right: 6px;">
                                 Retail
                             </label>
-                            <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check">
-                                <input type="checkbox" value="Food & Beverage" onchange="handleCategoryCheck()" style="margin-right: 6px;">
-                                F&B
+                            <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check" title="12,907 POIs">
+                                <input type="checkbox" value="HoReCa" onchange="handleCategoryCheck()" style="margin-right: 6px;">
+                                Hotels/Restaurants/Cafes
                             </label>
-                            <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check">
-                                <input type="checkbox" value="Hospitality" onchange="handleCategoryCheck()" style="margin-right: 6px;">
-                                Hospitality
+                            <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check" title="4,009 POIs">
+                                <input type="checkbox" value="Institutional" onchange="handleCategoryCheck()" style="margin-right: 6px;">
+                                Institutional
                             </label>
-                            <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check">
-                                <input type="checkbox" value="Corporate" onchange="handleCategoryCheck()" style="margin-right: 6px;">
-                                Corporate
+                            <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check" title="1,605 POIs">
+                                <input type="checkbox" value="Services" onchange="handleCategoryCheck()" style="margin-right: 6px;">
+                                Services
                             </label>
-                            <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check">
-                                <input type="checkbox" value="Healthcare" onchange="handleCategoryCheck()" style="margin-right: 6px;">
-                                Healthcare
+                            <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check" title="79 POIs">
+                                <input type="checkbox" value="Entertainment" onchange="handleCategoryCheck()" style="margin-right: 6px;">
+                                Entertainment
                             </label>
-                        </div>
-                        
-                        <!-- Sub-category filters for Distribution -->
-                        <div class="sub-category-filters" id="distributionSubFilters">
-                            <div class="sub-category-title">📦 Distribution Sub-Categories</div>
-                            <button class="filter-chip active" onclick="filterPOIsBySubCategory('all', this)">All Distribution</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('Bulk Supplier', this)">Bulk Supplier</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('Cash & Carry', this)">Cash & Carry</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('Distributor', this)">Distributor</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('Stockist', this)">Stockist</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('Wholesaler', this)">Wholesaler</button>
                         </div>
                     </div>
 
@@ -855,6 +840,7 @@
     <script src="territory_mgmt.js"></script>
 </body>
 </html>
+
 
 
 
