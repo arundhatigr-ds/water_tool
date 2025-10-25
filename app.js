@@ -2103,23 +2103,135 @@ function displayPOIsOnMap() {
     console.log(`✅ Displayed ${displayPOIs.length.toLocaleString()} POI markers on map`);
 }
 
-// Override updateMap to include POI display
-const originalUpdateMap = typeof updateMap !== 'undefined' ? updateMap : function() {};
 
-function updateMap() {
-    console.log('🔄 Updating map...');
+
+console.log('✅ POI display functions loaded');
+
+
+// ============================================================
+// CLEAN POI DISPLAY - NO INFINITE LOOPS
+// ============================================================
+
+let poiMarkersLayer = null;
+
+function displayPOIsOnMap() {
+    console.log('🗺️ Displaying POIs on map...');
     
-    // Call original updateMap if it exists
-    if (typeof originalUpdateMap === 'function') {
-        try {
-            originalUpdateMap();
-        } catch (e) {
-            console.log('Note: original updateMap had an issue:', e.message);
-        }
+    // Remove existing POI layer
+    if (poiMarkersLayer) {
+        map.removeLayer(poiMarkersLayer);
+        poiMarkersLayer = null;
     }
     
-    // Always display POIs
+    // Check if we should show POIs
+    const showPOIsCheckbox = document.getElementById('showPOIs');
+    if (showPOIsCheckbox && !showPOIsCheckbox.checked) {
+        console.log('POIs hidden by user');
+        return;
+    }
+    
+    if (!pois || pois.length === 0) {
+        console.log('⚠️ No POIs to display');
+        return;
+    }
+    
+    // Get active category filter
+    let activeCategories = [];
+    const expansionTab = document.getElementById('expansion-tab');
+    if (expansionTab) {
+        const categoryCheckboxes = expansionTab.querySelectorAll('input[type="checkbox"][value]');
+        categoryCheckboxes.forEach(checkbox => {
+            if (checkbox.checked && checkbox.value) {
+                activeCategories.push(checkbox.value);
+            }
+        });
+    }
+    
+    // Filter POIs
+    let displayPOIs = pois;
+    if (activeCategories.length > 0) {
+        displayPOIs = pois.filter(poi => 
+            activeCategories.includes(poi.business_category)
+        );
+        console.log(`Filtered to ${displayPOIs.length} POIs by category`);
+    }
+    
+    // Limit for performance - show random sample if too many
+    const maxPOIs = 5000;
+    if (displayPOIs.length > maxPOIs) {
+        console.log(`Sampling ${maxPOIs} POIs from ${displayPOIs.length} total`);
+        // Random sample for better distribution
+        displayPOIs = displayPOIs.sort(() => 0.5 - Math.random()).slice(0, maxPOIs);
+    }
+    
+    // Create marker cluster group for better performance
+    poiMarkersLayer = L.layerGroup();
+    
+    let successCount = 0;
+    displayPOIs.forEach(poi => {
+        // Validate coordinates
+        if (!poi.latitude || !poi.longitude || 
+            isNaN(poi.latitude) || isNaN(poi.longitude) ||
+            poi.latitude < -90 || poi.latitude > 90 ||
+            poi.longitude < -180 || poi.longitude > 180) {
+            return;
+        }
+        
+        try {
+            // Color by category
+            let color = '#667eea';
+            if (poi.business_category === 'Retail') color = '#4CAF50';
+            else if (poi.business_category === 'HoReCa') color = '#FF9800';
+            else if (poi.business_category === 'Institutional') color = '#2196F3';
+            else if (poi.business_category === 'Services') color = '#9C27B0';
+            else if (poi.business_category === 'Entertainment') color = '#E91E63';
+            
+            const marker = L.circleMarker([poi.latitude, poi.longitude], {
+                radius: 4,
+                fillColor: color,
+                color: '#fff',
+                weight: 1,
+                opacity: 0.8,
+                fillOpacity: 0.6
+            });
+            
+            // Create popup
+            const mapsLink = `https://www.google.com/maps?q=${poi.latitude},${poi.longitude}`;
+            const popupContent = `
+                <div style="min-width: 200px;">
+                    <h4 style="margin: 0 0 8px 0; color: ${color};">${poi.name || 'Unknown'}</h4>
+                    <div style="font-size: 12px;">
+                        <strong>Category:</strong> ${poi.business_category || 'N/A'}<br>
+                        <strong>Phone:</strong> ${poi.phone_number || 'N/A'}<br>
+                        <strong>Plant:</strong> ${poi.plant || 'N/A'}<br>
+                        <strong>Cluster:</strong> ${poi.cluster || 'N/A'}
+                    </div>
+                    <a href="${mapsLink}" target="_blank" style="display: inline-block; margin-top: 8px; padding: 4px 8px; background: ${color}; color: white; text-decoration: none; border-radius: 4px; font-size: 11px;">
+                        📍 Open in Maps
+                    </a>
+                </div>
+            `;
+            
+            marker.bindPopup(popupContent);
+            poiMarkersLayer.addLayer(marker);
+            successCount++;
+        } catch (e) {
+            // Skip problematic POIs silently
+        }
+    });
+    
+    // Add layer to map
+    if (successCount > 0) {
+        poiMarkersLayer.addTo(map);
+        console.log(`✅ Displayed ${successCount.toLocaleString()} POI markers on map`);
+    } else {
+        console.log('⚠️ No valid POIs to display');
+    }
+}
+
+// Call displayPOIs when checkbox changes
+function updatePOIDisplay() {
     displayPOIsOnMap();
 }
 
-console.log('✅ POI display functions loaded');
+console.log('✅ Clean POI display loaded');
