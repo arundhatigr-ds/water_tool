@@ -576,6 +576,11 @@
                             <input type="checkbox" checked id="showPOIs" onchange="updateMap()">
                             <span style="margin-left: 10px;">📍 POIs</span>
                         </label>
+                        <label style="display: flex; align-items: center; margin-bottom: 10px; cursor: pointer;">
+                            <input type="checkbox" id="showClusters" onchange="toggleClustersOnMap()">
+                            <span style="margin-left: 10px;">🗺️ Show 22 Territory Clusters</span>
+                        </label>
+
                         <label style="display: flex; align-items: center; margin-bottom: 5px; cursor: pointer;">
                             <input type="checkbox" id="showCoverage" onchange="updateMap()">
                             <span style="margin-left: 10px;">🎯 Distributor Coverage Circles</span>
@@ -840,6 +845,7 @@
     <script src="territory_mgmt.js"></script>
 </body>
 </html>
+
 
 
 
