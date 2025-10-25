@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Water Business Expansion Tool - Secure Access</title>
+    <title>Territory Management System - Secure Access</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
     <style>
@@ -13,12 +13,20 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             height: 100vh;
+        }
+
+        /* ============================================================ */
+        /* LOGIN SCREEN */
+        /* ============================================================ */
+        
+        .login-container {
+            height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .login-container {
+        .login-box {
             background: white;
             padding: 40px;
             border-radius: 16px;
@@ -32,6 +40,11 @@
             margin-bottom: 30px;
         }
 
+        .login-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
         .login-header h1 {
             font-size: 24px;
             color: #333;
@@ -43,36 +56,30 @@
             font-size: 14px;
         }
 
-        .login-icon {
-            font-size: 60px;
+        .form-group {
             margin-bottom: 20px;
         }
 
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-group label {
+        .form-group label {
             display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 600;
             font-size: 14px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
         }
 
-        .input-group input {
+        .form-group input {
             width: 100%;
-            padding: 12px 15px;
+            padding: 12px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 14px;
-            transition: all 0.3s;
+            transition: border-color 0.3s;
         }
 
-        .input-group input:focus {
+        .form-group input:focus {
             outline: none;
             border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .login-btn {
@@ -85,12 +92,11 @@
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: transform 0.2s;
         }
 
         .login-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
 
         .error-message {
@@ -98,790 +104,540 @@
             color: #c33;
             padding: 10px;
             border-radius: 6px;
+            margin-bottom: 20px;
             font-size: 13px;
-            margin-bottom: 15px;
             display: none;
         }
 
-        .error-message.show {
-            display: block;
-        }
-
+        /* ============================================================ */
+        /* MAIN APPLICATION */
+        /* ============================================================ */
+        
         #app {
             display: none;
-            width: 100%;
-            height: 100%;
-            background: #f5f7fa;
-        }
-
-        #app.active {
-            display: block;
         }
 
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 15px 20px;
+            padding: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 8px;
         }
 
-        .header-left h1 { font-size: 20px; margin-bottom: 3px; }
-        .header-left p { opacity: 0.9; font-size: 12px; }
+        .header h1 {
+            font-size: 24px;
+        }
 
         .logout-btn {
-            padding: 8px 20px;
+            padding: 8px 16px;
             background: rgba(255,255,255,0.2);
-            color: white;
             border: 1px solid rgba(255,255,255,0.3);
+            color: white;
             border-radius: 6px;
             cursor: pointer;
             font-size: 13px;
             font-weight: 600;
-            transition: all 0.3s;
         }
 
         .logout-btn:hover {
             background: rgba(255,255,255,0.3);
         }
 
-        .container { display: flex; height: calc(100vh - 65px); }
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .location-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 350px 1fr 350px;
+            height: calc(100vh - 120px);
+            gap: 0;
+            background: #f5f7fa;
+        }
 
         .sidebar {
-            width: 380px;
             background: white;
-            padding: 20px;
             overflow-y: auto;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            border-right: 1px solid #e0e0e0;
         }
 
-        .tabs {
+        .sidebar-right {
+            background: white;
+            overflow-y: auto;
+            border-left: 1px solid #e0e0e0;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        .panel {
+            padding: 20px;
+        }
+
+        .panel-header {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e0e0e0;
-        }
-
-        .tab {
-            padding: 10px 20px;
-            cursor: pointer;
-            border: none;
-            background: none;
-            font-weight: 600;
-            color: #666;
-            transition: all 0.3s;
-            border-bottom: 3px solid transparent;
-            font-size: 13px;
-        }
-
-        .tab:hover { color: #667eea; }
-        .tab.active { color: #667eea; border-bottom-color: #667eea; }
-
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        .stats-panel {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            align-items: center;
+            gap: 8px;
         }
 
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-top: 10px;
-        }
-
-        .stat-item { text-align: center; }
-        .stat-value { font-size: 24px; font-weight: 700; display: block; }
-        .stat-label { font-size: 11px; opacity: 0.9; margin-top: 5px; }
-
-        .control-section {
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .section-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-        }
-
-        .section-title::before {
-            content: '';
-            width: 4px;
-            height: 20px;
-            background: #667eea;
-            margin-right: 10px;
-            border-radius: 2px;
-        }
-
-        .radius-buttons {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
             gap: 10px;
+            margin-bottom: 15px;
         }
 
-        .radius-btn {
+        .stat-card {
+            background: #f8f9fa;
             padding: 12px;
-            border: 2px solid #e0e0e0;
-            background: white;
             border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 14px;
-            font-weight: 600;
+            text-align: center;
         }
 
-        .radius-btn:hover { border-color: #667eea; background: #f8f9ff; }
-        .radius-btn.active { background: #667eea; color: white; border-color: #667eea; }
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #667eea;
+        }
 
-        .action-btn {
-            width: 100%;
-            padding: 12px;
-            background: #667eea;
-            color: white;
+        .stat-label {
+            font-size: 11px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .btn {
+            padding: 10px 16px;
             border: none;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 10px;
-        }
-
-        .action-btn:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-
-        .distributor-list {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 10px;
-        }
-
-        .distributor-item {
-            padding: 10px;
+            transition: all 0.2s;
+            width: 100%;
             margin-bottom: 8px;
-            background: #f8f9ff;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-            border-left: 4px solid transparent;
         }
 
-        .distributor-item:hover {
-            background: #e8ebff;
-            border-left-color: #667eea;
-        }
-
-        .distributor-item.selected {
+        .btn-primary {
             background: #667eea;
             color: white;
-            border-left-color: #4a56c9;
         }
 
-        .distributor-name {
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .plant-section {
+            margin-bottom: 25px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .plant-header {
+            color: white;
+            padding: 12px 15px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .plant-header.kunigal {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        }
+
+        .plant-header.harohalli {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .cluster-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .cluster-item:hover {
+            background: #f8f9fa;
+        }
+
+        .cluster-item:last-child {
+            border-bottom: none;
+        }
+
+        .cluster-name {
             font-weight: 600;
             font-size: 13px;
+            color: #333;
             margin-bottom: 4px;
         }
 
-        .distributor-meta {
-            font-size: 11px;
-            opacity: 0.8;
-        }
-
-        .performance-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 600;
-            margin-left: 5px;
-        }
-
-        .badge-excellent { background: #28a745; color: white; }
-        .badge-good { background: #ffc107; color: #333; }
-        .badge-average { background: #ff9800; color: white; }
-        .badge-below { background: #dc3545; color: white; }
-
-        .filter-chip {
-            padding: 6px 12px;
-            border: 2px solid #e0e0e0;
-            background: white;
-            border-radius: 20px;
-            cursor: pointer;
+        .cluster-officer {
             font-size: 12px;
-            transition: all 0.3s;
-            display: inline-block;
-            margin: 4px;
+            color: #667eea;
+            margin-bottom: 2px;
         }
 
-        .filter-chip:hover { border-color: #667eea; }
-        .filter-chip.active { background: #667eea; color: white; border-color: #667eea; }
+        .cluster-officer.vacant {
+            color: #999;
+            font-style: italic;
+        }
 
-        .sub-category-filters {
-            display: none;
-            margin-top: 15px;
-            padding: 15px;
-            background: #f8f9ff;
+        .cluster-stats {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .poi-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .poi-item {
+            background: white;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
             border-radius: 8px;
-            border-left: 4px solid #667eea;
+            margin-bottom: 8px;
         }
 
-        .sub-category-filters.active {
+        .poi-name {
+            font-weight: 600;
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .poi-details {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+
+        .poi-link {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .poi-link:hover {
+            background: #5568d3;
+        }
+
+        .vacant-assignment {
+            background: #fff9e6;
+            padding: 15px;
+            border: 2px dashed #ffc107;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .assignment-header {
+            font-weight: 700;
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .form-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 6px;
             display: block;
         }
 
-        .sub-category-title {
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
             font-size: 13px;
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 10px;
         }
 
-        #map { flex: 1; height: 100%; }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 10000;
-            align-items: center;
-            justify-content: center;
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
         }
 
-        .modal.active { display: flex; }
-
-        .modal-content {
+        .legend {
             background: white;
-            padding: 30px;
-            border-radius: 12px;
-            max-width: 900px;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-        }
-
-        .modal-header {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .modal-close {
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            color: #999;
-        }
-
-        .modal-close:hover { color: #333; }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
+            padding: 15px;
+            border-radius: 8px;
             margin-top: 15px;
         }
 
-        th {
-            background: #667eea;
-            color: white;
-            padding: 10px;
-            text-align: left;
-            font-size: 11px;
-        }
-
-        td {
-            padding: 8px;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        tr:hover { background: #f8f9ff; }
-
-        .report-section {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-
-        .report-title {
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-
-        .info-banner {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 15px;
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
             font-size: 12px;
-            color: #1565c0;
         }
 
-        select {
-            width: 100%;
-            padding: 10px;
-            border-radius: 6px;
-            border: 2px solid #e0e0e0;
-            margin-bottom: 10px;
-            font-size: 13px;
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        #clusterInfo {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .selected-cluster-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .selected-officer {
+            font-size: 12px;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .selected-stats {
+            font-size: 11px;
+            color: #666;
         }
     </style>
 </head>
 <body>
-    <div class="login-container" id="loginScreen">
-        <div class="login-header">
-            <div class="login-icon">🚰</div>
-            <h1>Water Business Tool</h1>
-            <p>Secure Access Portal</p>
-        </div>
-
-        <div class="error-message" id="errorMessage">
-            Invalid username or password. Please try again.
-        </div>
-
-        <form id="loginForm" onsubmit="handleLogin(event)">
-            <div class="input-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" placeholder="Enter your username" required autocomplete="username">
+    <!-- ============================================================ -->
+    <!-- LOGIN SCREEN -->
+    <!-- ============================================================ -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <div class="login-icon">🗺️</div>
+                <h1>Territory Management System</h1>
+                <p>Kunigal & Harohalli Water Distribution</p>
             </div>
 
-            <div class="input-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" placeholder="Enter your password" required autocomplete="current-password">
+            <div class="error-message" id="errorMessage">
+                ❌ Invalid password. Please try again.
             </div>
 
-            <button type="submit" class="login-btn">🔐 Login</button>
-        </form>
+            <form onsubmit="login(event)">
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        placeholder="Enter password"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
 
-        <div style="margin-top: 20px; text-align: center; font-size: 12px; color: #999;">
-            Demo: admin/admin2024! or test/test2024!
+                <button type="submit" class="login-btn">
+                    🔓 Access System
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #999;">
+                Secure access for authorized personnel only
+            </div>
         </div>
     </div>
 
+    <!-- ============================================================ -->
+    <!-- MAIN APPLICATION -->
+    <!-- ============================================================ -->
     <div id="app">
         <div class="header">
-            <div class="header-left">
-                <h1>🚰 Water Business Expansion & Territory Planning Tool</h1>
-                <p><span id="poiCountHeader">Loading...</span> POIs • 46 Distributors • Real-time Analysis</p>
+            <div class="header-top">
+                <h1>🗺️ Territory Management System</h1>
+                <button class="logout-btn" onclick="logout()">🔒 Logout</button>
             </div>
-            <div>
-                <span style="margin-right: 15px; font-size: 13px;" id="userDisplay"></span>
-                <button class="logout-btn" onclick="logout()">🚪 Logout</button>
-            </div>
+            <p id="headerSubtitle">Kunigal & Harohalli Plants | Loading data...</p>
+            <div class="location-badge" id="userLocation">📍 Detecting location...</div>
         </div>
 
         <div class="container">
+            <!-- Left Sidebar -->
             <div class="sidebar">
-                <div class="tabs">
-                    <button class="tab active" data-tab="overview">📊 Overview</button>
-                    <button class="tab" data-tab="distributors">📦 Distributors</button>
-                    <button class="tab" data-tab="expansion">🎯 Expansion</button>
-                    <button class="tab" data-tab="territory">🗺️ Territory Mgmt</button>
-                </div>
-
-                <div class="tab-content active" id="overview-tab">
-                    <div class="info-banner">
-                        ✅ <strong>POI Database</strong><br>
-                        <span id="poiStatusText">Loading POI data from GitHub...</span>
-                    </div>
-
-                    <div class="stats-panel">
-                        <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">Business Metrics</div>
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <span class="stat-value" id="totalDist">46</span>
-                                <span class="stat-label">Active Distributors</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-value" id="totalRetailers">5,000+</span>
-                                <span class="stat-label">Current Retailers</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-value" id="totalPOIs">...</span>
-                                <span class="stat-label">Total POIs</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-value" id="coverage">...</span>
-                                <span class="stat-label">Market Coverage</span>
-                            </div>
+                <div class="panel">
+                    <div class="panel-header">📊 Territory Overview</div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalPOIs">0</div>
+                            <div class="stat-label">Total POIs</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">22</div>
+                            <div class="stat-label">Clusters</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="assignedOfficers">5</div>
+                            <div class="stat-label">Officers</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="vacantClusters">8</div>
+                            <div class="stat-label">Vacant</div>
                         </div>
                     </div>
 
-                    <div class="control-section">
-                        <div class="section-title">Expansion Simulation</div>
-                        <div class="radius-buttons">
-                            <button class="radius-btn" data-radius="25">25 KM</button>
-                            <button class="radius-btn active" data-radius="50">50 KM</button>
-                            <button class="radius-btn" data-radius="75">75 KM</button>
-                            <button class="radius-btn" data-radius="100">100 KM</button>
-                            <button class="radius-btn" data-radius="125">125 KM</button>
-                            <button class="radius-btn" data-radius="0">Clear</button>
+                    <button class="btn btn-primary" onclick="showAllTerritory()">🗺️ Show All</button>
+                    <button class="btn btn-primary" onclick="showMyLocation()" id="myLocationBtn" style="display:none;">📍 My Location</button>
+                    <button class="btn btn-success" onclick="exportAllData()">📥 Export Summary</button>
+                    <button class="btn btn-success" onclick="exportChanges()">💾 Export Changes</button>
+
+                    <hr style="margin: 20px 0; border: none; border-top: 1px solid #e0e0e0;">
+
+                    <!-- Kunigal Plant -->
+                    <div class="plant-section">
+                        <div class="plant-header kunigal">🏭 KUNIGAL PLANT</div>
+                        <div id="kunigalClusters"></div>
+                    </div>
+
+                    <!-- Harohalli Plant -->
+                    <div class="plant-section">
+                        <div class="plant-header harohalli">🏭 HAROHALLI PLANT</div>
+                        <div id="harohalliClusters"></div>
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="legend">
+                        <div class="panel-header" style="font-size: 14px;">🎨 Map Legend</div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #ff6b6b;"></div>
+                            <span>Kunigal Plant</span>
                         </div>
-                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0;">
-                            <label style="display: flex; align-items: center; margin-bottom: 10px; cursor: pointer;">
-                                <input type="checkbox" id="useCustomRadius" onchange="toggleCustomRadius()">
-                                <span style="margin-left: 10px; font-weight: 600; font-size: 13px;">🎯 Use Custom Radius</span>
-                            </label>
-                            <div style="display: flex; gap: 8px;">
-                                <input type="number" id="customRadiusInput" min="1" max="500" placeholder="Enter KM (1-500)" disabled style="flex: 1; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 13px;">
-                                <button onclick="applyCustomRadius()" style="padding: 10px 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">Apply</button>
-                            </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #4facfe;"></div>
+                            <span>Harohalli Plant</span>
                         </div>
-                    </div>
-
-                    <div class="control-section">
-                        <div class="section-title">Map Layers</div>
-                        <label style="display: flex; align-items: center; margin-bottom: 10px; cursor: pointer;">
-                            <input type="checkbox" checked id="showPlants" onchange="updateMap()">
-                            <span style="margin-left: 10px;">🏭 Plants (2)</span>
-                        </label>
-                        <label style="display: flex; align-items: center; margin-bottom: 10px; cursor: pointer;">
-                            <input type="checkbox" checked id="showDistributors" onchange="updateMap()">
-                            <span style="margin-left: 10px;">📦 Distributors (46)</span>
-                        </label>
-                        <label style="display: flex; align-items: center; margin-bottom: 10px; cursor: pointer;">
-                            <input type="checkbox" checked id="showPOIs" onchange="updateMap()">
-                            <span style="margin-left: 10px;">📍 POIs</span>
-                        </label>
-                        <label style="display: flex; align-items: center; margin-bottom: 5px; cursor: pointer;">
-                            <input type="checkbox" id="showCoverage" onchange="updateMap()">
-                            <span style="margin-left: 10px;">🎯 Distributor Coverage Circles</span>
-                        </label>
-                        <div style="margin-left: 30px; margin-bottom: 10px;">
-                            <label style="font-size: 11px; color: #666; display: block; margin-bottom: 4px;">Coverage Radius (KM):</label>
-                            <input type="number" id="coverageRadius" min="1" max="200" value="25" placeholder="25" 
-                                   onchange="updateMap()" 
-                                   style="width: 100px; padding: 6px 8px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 12px;">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #ffc107;"></div>
+                            <span>Current Distributors (24)</span>
                         </div>
-                        <label style="display: flex; align-items: center; cursor: pointer;">
-                            <input type="checkbox" id="showDistLines" onchange="updateMap()">
-                            <span style="margin-left: 10px;">📏 Plant-Distributor Distance Lines</span>
-                        </label>
-                    </div>
-
-                    <div class="control-section">
-                        <div class="section-title">📊 Current View Statistics</div>
-                        <div style="background: #f8f9ff; padding: 12px; border-radius: 8px; border-left: 4px solid #667eea;">
-                            <div style="font-size: 12px; color: #666; margin-bottom: 8px;">POIs in Current Radius:</div>
-                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                                <div style="text-align: center;">
-                                    <div style="font-size: 20px; font-weight: 700; color: #667eea;" id="currentRadiusPOIs">0</div>
-                                    <div style="font-size: 10px; color: #666;">Total POIs</div>
-                                </div>
-                                <div style="text-align: center;">
-                                    <div style="font-size: 20px; font-weight: 700; color: #28a745;" id="filteredPOIs">0</div>
-                                    <div style="font-size: 10px; color: #666;">Filtered POIs</div>
-                                </div>
-                            </div>
-                            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e0e0e0;">
-                                <div style="font-size: 11px; color: #666; margin-bottom: 4px;">Active Radius: <strong id="activeRadiusDisplay">None</strong></div>
-                                <div style="font-size: 11px; color: #666;">Active Filter: <strong id="activeFilterDisplay">All Categories</strong></div>
-                            </div>
-                            <button class="action-btn" onclick="exportCurrentViewPOIs()" style="margin-top: 10px;">
-                                📥 Export Current View POIs
-                            </button>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #28a745;"></div>
+                            <span>Assigned POIs</span>
                         </div>
-                    </div>
-
-                    <div class="control-section">
-                        <div class="section-title">Quick Reports</div>
-                        <button class="action-btn" onclick="showPerformanceReport()">
-                            📊 Distributor Performance
-                        </button>
-                        <button class="action-btn" onclick="showCoverageGaps()">
-                            🎯 Coverage Gap Analysis
-                        </button>
-                        <button class="action-btn" onclick="showNewWSPlan()">
-                            ⭐ New WS Opportunities
-                        </button>
-                    </div>
-                </div>
-
-                <div class="tab-content" id="distributors-tab">
-                    <div class="control-section">
-                        <div class="section-title">Filter Distributors</div>
-                        <select id="perfFilter" onchange="filterDistributors()">
-                            <option value="all">All Performance Levels</option>
-                            <option value="Excellent">Excellent (90%+)</option>
-                            <option value="Good">Good (75-90%)</option>
-                            <option value="Average">Average (60-75%)</option>
-                            <option value="Below Average">Below Average (<60%)</option>
-                        </select>
-                        <select id="cityFilter" onchange="filterDistributors()">
-                            <option value="all">All Cities</option>
-                            <option value="Bangalore">Bangalore</option>
-                            <option value="Bengaluru">Bengaluru</option>
-                            <option value="Tumkur">Tumkur</option>
-                        </select>
-                        <select id="classFilter" onchange="filterDistributors()">
-                            <option value="all">All Classifications</option>
-                            <option value="Distributor">Distributor</option>
-                            <option value="Retailer">Retailer</option>
-                        </select>
-                    </div>
-
-                    <div class="control-section">
-                        <div class="section-title">Distributor List</div>
-                        <div class="distributor-list" id="distributorList"></div>
-                    </div>
-                </div>
-
-                <div class="tab-content" id="expansion-tab">
-                    <div class="control-section">
-                        <div class="section-title">🏪 POI Category Filters</div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
-                            <!-- Retail -->
-                            <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check">
-                                <input type="checkbox" value="Retail" onchange="handleCategoryCheck()" style="margin-right: 6px;">
-                                🛒 Retail
-                            </label>
-                            <!-- HoReCa -->
-                            <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check">
-                                <input type="checkbox" value="HoReCa" onchange="handleCategoryCheck()" style="margin-right: 6px;">
-                                🍽️ HoReCa
-                            </label>
-                            <!-- Services -->
-                            <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check">
-                                <input type="checkbox" value="Services" onchange="handleCategoryCheck()" style="margin-right: 6px;">
-                                💇 Services
-                            </label>
-                            <!-- Institutional -->
-                            <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check">
-                                <input type="checkbox" value="Institutional" onchange="handleCategoryCheck()" style="margin-right: 6px;">
-                                🏥 Institutional
-                            </label>
-                            <!-- Entertainment -->
-                            <label style="display: inline-flex; align-items: center; padding: 6px 12px; background: white; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-size: 13px; transition: all 0.2s;" class="cat-check">
-                                <input type="checkbox" value="Entertainment" onchange="handleCategoryCheck()" style="margin-right: 6px;">
-                                🎬 Entertainment
-                            </label>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #999;"></div>
+                            <span>Vacant Territory POIs</span>
                         </div>
-                        
-                        <!-- Sub-category filters for Retail -->
-                        <div class="sub-category-filters" id="retailSubFilters" style="display: none;">
-                            <div class="sub-category-title">🛒 Retail Types</div>
-                            <button class="filter-chip active" onclick="filterPOIsBySubCategory('all', this)">All Retail</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('store', this)">Store</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('supermarket', this)">Supermarket</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('convenience_store', this)">Convenience</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('shopping_mall', this)">Mall</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('liquor_store', this)">Liquor</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('electronics_store', this)">Electronics</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('pharmacy', this)">Pharmacy</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('bakery', this)">Bakery</button>
-                        </div>
-                        
-                        <!-- Sub-category filters for HoReCa -->
-                        <div class="sub-category-filters" id="horecaSubFilters" style="display: none;">
-                            <div class="sub-category-title">🍽️ HoReCa Types</div>
-                            <button class="filter-chip active" onclick="filterPOIsBySubCategory('all', this)">All HoReCa</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('restaurant', this)">Restaurant</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('hotel', this)">Hotel</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('cafe', this)">Cafe</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('bar', this)">Bar</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('meal_takeaway', this)">Takeaway</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('lodging', this)">Lodging</button>
-                        </div>
-                        
-                        <!-- Sub-category filters for Services -->
-                        <div class="sub-category-filters" id="servicesSubFilters" style="display: none;">
-                            <div class="sub-category-title">💇 Service Types</div>
-                            <button class="filter-chip active" onclick="filterPOIsBySubCategory('all', this)">All Services</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('beauty_salon', this)">Beauty Salon</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('hair_care', this)">Hair Care</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('car_wash', this)">Car Wash</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('gym', this)">Gym</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('spa', this)">Spa</button>
-                        </div>
-                        
-                        <!-- Keep old Distribution subcategories hidden for compatibility -->
-                        <div class="sub-category-filters" id="distributionSubFilters" style="display: none;">
-                            <div class="sub-category-title">📦 Distribution Sub-Categories</div>
-                            <button class="filter-chip active" onclick="filterPOIsBySubCategory('all', this)">All Distribution</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('Bulk Supplier', this)">Bulk Supplier</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('Cash & Carry', this)">Cash & Carry</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('Distributor', this)">Distributor</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('Stockist', this)">Stockist</button>
-                            <button class="filter-chip" onclick="filterPOIsBySubCategory('Wholesaler', this)">Wholesaler</button>
-                        </div>
-                    </div>
-
-                    <div class="stats-panel" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
-                        <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">Expansion Opportunity</div>
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <span class="stat-value" id="newWSNeeded">...</span>
-                                <span class="stat-label">New WS Needed</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-value" id="investment">...</span>
-                                <span class="stat-label">Investment</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-value" id="monthlyRev">...</span>
-                                <span class="stat-label">Monthly Revenue</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-value" id="roi">6 mo</span>
-                                <span class="stat-label">ROI Period</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="control-section">
-                        <div class="section-title">🏭 Export POIs by Plant</div>
-                        <select id="plantSelect">
-                            <option value="">Select a plant...</option>
-                            <option value="plant1">Bangalore Plant (Main)</option>
-                            <option value="plant2">Secondary Plant</option>
-                        </select>
-                        <button class="action-btn" onclick="exportPOIsByPlant()">
-                            📥 Export POIs from Selected Plant
-                        </button>
-                        <p style="font-size: 11px; color: #666; margin-top: 8px;">
-                            💡 Export will use current radius setting or 150 KM if no radius selected
-                        </p>
-                    </div>
-
-                    <div class="control-section">
-                        <div class="section-title">📦 Export POIs by Distributor</div>
-                        <select id="distributorSelect" onchange="updateDistributorExportInfo()">
-                            <option value="">Select a distributor...</option>
-                        </select>
-                        <div style="margin: 10px 0; padding: 8px; background: #f8f9ff; border-radius: 6px; border-left: 3px solid #667eea; display: none;" id="distExportInfo">
-                            <div style="font-size: 11px; color: #666; margin-bottom: 4px;">Selected Distributor Info:</div>
-                            <div style="font-size: 12px; font-weight: 600;" id="distInfoText"></div>
-                        </div>
-                        <button class="action-btn" onclick="exportPOIsBySelectedDistributor()">
-                            📥 Export POIs from Selected Distributor
-                        </button>
-                        <p style="font-size: 11px; color: #666; margin-top: 8px;">
-                            💡 Export will use coverage radius setting (default 25 KM)
-                        </p>
-                    </div>
-
-                    <div class="control-section">
-                        <div class="section-title">Export Options</div>
-                        <button class="action-btn" onclick="exportDistributors()">
-                            📥 Export Distributors (CSV)
-                        </button>
-                        <button class="action-btn" onclick="exportPOIs()">
-                            📥 Export All POIs (CSV)
-                        </button>
-                        <p style="font-size: 11px; color: #666; margin-top: 8px;">
-                            💡 To export POIs around a specific distributor, click on the distributor marker on the map
-                        </p>
-                    </div>
-                </div>
-
-                <div class="tab-content" id="territory-tab">
-                    <div class="control-section">
-                        <div class="section-title">🗺️ Define Territory</div>
-                        <button class="action-btn" onclick="startDrawingTerritory()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                            ✏️ Draw Territory on Map
-                        </button>
-                        <p style="font-size: 11px; color: #666; margin-top: 8px;">
-                            💡 Use polygon or rectangle tool to draw territory boundaries on the map
-                        </p>
-                    </div>
-
-                    <div class="control-section" id="territoryAssignPanel" style="display: none;">
-                        <div class="section-title">📋 Territory Details</div>
-                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                            <div style="margin-bottom: 12px;">
-                                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #333;">Territory Name:</label>
-                                <input type="text" id="territoryName" placeholder="e.g. North Bangalore" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
-                            </div>
-                            
-                            <div style="margin-bottom: 12px;">
-                                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #333;">Assign to Sales Person:</label>
-                                <input type="text" id="salesPerson" placeholder="e.g. Rajesh Kumar" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
-                            </div>
-                            
-                            <div style="margin-bottom: 12px;">
-                                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #333;">Contact Number:</label>
-                                <input type="tel" id="salesContact" placeholder="e.g. +91 9876543210" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
-                            </div>
-                            
-                            <div style="margin-bottom: 12px;">
-                                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #333;">Target (Monthly):</label>
-                                <input type="number" id="monthlyTarget" placeholder="e.g. 50000" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
-                            </div>
-                            
-                            <div style="background: white; padding: 10px; border-radius: 6px; margin-bottom: 12px;">
-                                <div style="font-size: 11px; color: #666; margin-bottom: 4px;">POIs in Territory:</div>
-                                <div style="font-size: 20px; font-weight: 700; color: #667eea;" id="territoryPOICount">0</div>
-                            </div>
-                            
-                            <button class="action-btn" onclick="saveTerritory()" style="width: 100%; background: #28a745;">
-                                💾 Save Territory Assignment
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="control-section">
-                        <div class="section-title">📊 All Territories</div>
-                        <div id="territoriesList" style="max-height: 400px; overflow-y: auto;">
-                            <div style="text-align: center; padding: 20px; color: #999; font-size: 13px;">
-                                No territories defined yet. Click "Draw Territory" to start.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="control-section">
-                        <div class="section-title">📥 Export Options</div>
-                        <button class="action-btn" onclick="exportTerritories()">
-                            📥 Export All Territories (CSV)
-                        </button>
-                        <button class="action-btn" onclick="exportTerritoryPOIs()">
-                            📥 Export All Territory POIs (CSV)
-                        </button>
                     </div>
                 </div>
             </div>
 
+            <!-- Center Map -->
             <div id="map"></div>
+
+            <!-- Right Sidebar -->
+            <div class="sidebar-right">
+                <div class="panel">
+                    <div class="panel-header">📍 Cluster Details</div>
+
+                    <div id="clusterInfo">
+                        <div class="selected-cluster-name" id="selectedClusterName">Select a cluster</div>
+                        <div class="selected-officer" id="selectedOfficer"></div>
+                        <div class="selected-stats" id="selectedStats"></div>
+                    </div>
+
+                    <!-- Assignment Form -->
+                    <div id="vacantAssignment" class="vacant-assignment" style="display: none;">
+                        <div class="assignment-header">✏️ Assign Sales Officer</div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Officer Name *</label>
+                            <input type="text" class="form-input" id="newOfficerName" placeholder="Enter name">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Mobile Number *</label>
+                            <input type="text" class="form-input" id="newOfficerMobile" placeholder="10-digit number">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Monthly Target (₹)</label>
+                            <input type="number" class="form-input" id="newOfficerTarget" placeholder="Enter target amount">
+                        </div>
+                        
+                        <button class="btn btn-success" onclick="assignOfficer()">💾 Save Assignment</button>
+                        <button class="btn btn-danger" onclick="cancelAssignment()">❌ Cancel</button>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="exportClusterData()" id="exportClusterBtn" style="display: none;">
+                        📥 Export Cluster POIs
+                    </button>
+
+                    <div class="panel-header">📋 POIs in Selected Cluster</div>
+
+                    <div id="poiCount" style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                        Select a cluster to view POIs
+                    </div>
+
+                    <div class="poi-list" id="poiList">
+                        <!-- POIs will be loaded here -->
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="modal" id="reportModal">
-        <div class="modal-content">
-            <span class="modal-close" onclick="closeModal()">&times;</span>
-            <div id="modalContent"></div>
-        </div>
-    </div>
-
+    <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="app.js"></script>
-    <script src="territory_mgmt.js"></script>
+    <script src="territory.js"></script>
 </body>
 </html>
+
+
