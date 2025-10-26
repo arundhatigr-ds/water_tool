@@ -475,10 +475,21 @@ function handleLogin(event) {
     const password = document.getElementById('password').value;
     
     if (username === 'admin' && password === 'admin2024!') {
-        document.getElementById('loginPage').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'flex';
+        // Use correct IDs from HTML: loginScreen and app
+        const loginScreen = document.getElementById('loginScreen');
+        const appContainer = document.getElementById('app');
         
-        // Initialize app
+        if (loginScreen) {
+            loginScreen.style.display = 'none';
+        }
+        
+        if (appContainer) {
+            appContainer.style.display = 'flex';
+        }
+        
+        console.log('✅ Login successful');
+        
+        // Initialize app after a short delay
         setTimeout(initializeApp, 100);
     } else {
         alert('❌ Invalid credentials! Use admin / admin2024!');
