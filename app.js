@@ -457,7 +457,7 @@ function initializeFilters() {
     const categories = [...new Set(pois.map(p => p.business_category))].filter(Boolean).sort();
     const channels = [...new Set(pois.map(p => p.channel))].filter(Boolean).sort();
     const clusters = [...new Set(pois.map(p => p.cluster))].filter(Boolean).sort();
-    const officers = [...new Set(pois.map(p => p.sales_officer))].filter(Boolean && p => p !== 'Vacant').sort();
+    const officers = [...new Set(pois.map(p => p.sales_officer))].filter(p => p && p !== 'Vacant').sort();
     const tsms = [...new Set(distributorsData.map(d => d.tsm))].filter(Boolean).sort();
     const cities = [...new Set(distributorsData.map(d => d.city))].filter(Boolean).sort();
     
