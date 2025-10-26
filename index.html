@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Business Territory Management System</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Login Styles */
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .login-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        /* Main App Styles */
+        .app-container {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            background: #f5f6fa;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header-info {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 16px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .main-content {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+
+        .sidebar {
+            width: 380px;
+            background: white;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        }
+
+        .map-container {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .tab-btn:hover {
+            background: #e8e9ea;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Control Panels */
+        .control-panel {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .control-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 6px;
+            display: block;
+            font-weight: 600;
+        }
+
+        select, input[type="text"], input[type="number"], textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        select:focus, input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        /* Table Styles */
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 10px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        td {
+            padding: 10px;
+            font-size: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Map Legend */
+        .map-legend {
+            position: absolute;
+            bottom: 30px;
+            right: 10px;
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            font-size: 12px;
+            z-index: 1000;
+        }
+
+        .legend-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #333;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            display: none;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Territory List */
+        .territory-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .territory-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+
+        .territory-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .territory-id {
+            font-size: 11px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .territory-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .territory-stat {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        .territory-stat-label {
+            font-size: 10px;
+            color: #666;
+        }
+
+        .territory-stat-value {
+            font-size: 12px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: absolute;
+                z-index: 1000;
+                height: 50%;
+                bottom: 0;
+            }
+            
+            .map-container {
+                height: 50%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-container" id="loginScreen">
+        <div class="login-header">
+            <div class="login-icon">💧</div>
+            <h1>Water Business Territory System</h1>
+            <p>Secure Access Portal</p>
+        </div>
+        
+        <div class="input-group">
+            <label>Username</label>
+            <input type="text" id="username" placeholder="Enter your username">
+        </div>
+        
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="password" placeholder="Enter your password">
+        </div>
+        
+        <button class="login-btn" onclick="handleLogin()">🔓 LOGIN</button>
+        
+        <div class="error-message" id="errorMessage"></div>
+    </div>
+
+    <!-- Main Application -->
+    <div class="app-container" id="appContainer">
+        <div class="header">
+            <h1>🌊 Water Business Territory Management System</h1>
+            <div class="header-info">
+                <span id="userDisplay"></span>
+                <span id="dateDisplay"></span>
+                <button class="logout-btn" onclick="handleLogout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <!-- Tab Navigation -->
+                <div class="tab-nav">
+                    <button class="tab-btn active" onclick="switchTab('overview')">📊 Overview</button>
+                    <button class="tab-btn" onclick="switchTab('distributors')">🚚 Distributors</button>
+                    <button class="tab-btn" onclick="switchTab('expansion')">🎯 Expansion</button>
+                    <button class="tab-btn" onclick="switchTab('territory')">🗺️ Territory</button>
+                    <button class="tab-btn" onclick="switchTab('allocated')">✅ Allocated</button>
+                </div>
+
+                <!-- Overview Tab -->
+                <div class="tab-content active" id="overviewTab">
+                    <div class="control-panel">
+                        <div class="control-title">📈 System Statistics</div>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalPOIs">0</div>
+                                <div class="stat-label">Total POIs</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalDistributors">0</div>
+                                <div class="stat-label">Distributors</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalTerritories">0</div>
+                                <div class="stat-label">Territories</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="coveragePercent">0%</div>
+                                <div class="stat-label">Coverage</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-panel">
+                        <div class="control-title">🏭 Plant Selection</div>
+                        <div class="control-group">
+                            <select id="plantSelect" onchange="updatePlantView()">
+                                <option value="all">All Plants</option>
+                                <option value="kunigal">Kunigal Plant</option>
+                                <option value="harohalli">Harohalli Plant</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="control-panel">
+                        <div class="control-title">📊 Zone Analysis</div>
+                        <div id="zoneAnalysis"></div>
+                    </div>
+                </div>
+
+                <!-- Distributors Tab -->
+                <div class="tab-content" id="distributorsTab">
+                    <div class="control-panel">
+                        <div class="control-title">🚚 Distributor Management</div>
+                        <div class="control-group">
+                            <div class="control-label">Filter by TSM</div>
+                            <select id="tsmFilter" onchange="filterDistributors()">
+                                <option value="all">All TSMs</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label">Filter by City</div>
+                            <select id="cityFilter" onchange="filterDistributors()">
+                                <option value="all">All Cities</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="control-panel">
+                        <div class="control-title">📈 Performance Metrics</div>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalTarget">₹0</div>
+                                <div class="stat-label">Total Target</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalSales">₹0</div>
+                                <div class="stat-label">Total Sales</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="distributorsList"></div>
+                </div>
+
+                <!-- Expansion Tab -->
+                <div class="tab-content" id="expansionTab">
+                    <div class="control-panel">
+                        <div class="control-title">🎯 Market Expansion Analysis</div>
+                        
+                        <div class="control-group">
+                            <div class="control-label">Channel Filter</div>
+                            <select id="channelFilter" onchange="applyExpansionFilters()">
+                                <option value="all">All Channels</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">Business Category</div>
+                            <select id="businessCategoryFilter" onchange="applyExpansionFilters()">
+                                <option value="all">All Categories</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">Distributor Type</div>
+                            <select id="distributorTypeFilter" onchange="applyExpansionFilters()">
+                                <option value="all">All Types</option>
+                                <option value="Retailer">Retailer</option>
+                                <option value="Distributor">Distributor</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">Potential Level</div>
+                            <select id="potentialFilter" onchange="applyExpansionFilters()">
+                                <option value="all">All Potentials</option>
+                                <option value="Very High">Very High</option>
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">Distance Range (km)</div>
+                            <select id="distanceFilter" onchange="applyExpansionFilters()">
+                                <option value="all">All Distances</option>
+                                <option value="0-10">0-10 km</option>
+                                <option value="10-20">10-20 km</option>
+                                <option value="20-30">20-30 km</option>
+                                <option value="30+">30+ km</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="control-panel">
+                        <div class="control-title">📊 Expansion Statistics</div>
+                        <div id="expansionStats"></div>
+                    </div>
+
+                    <div class="control-panel">
+                        <button class="btn btn-success" onclick="exportExpansionData()">📥 Export Analysis</button>
+                    </div>
+                </div>
+
+                <!-- Territory Tab -->
+                <div class="tab-content" id="territoryTab">
+                    <div class="control-panel">
+                        <div class="control-title">🗺️ Territory Drawing</div>
+                        <button class="btn" onclick="startDrawingTerritory()">✏️ Draw New Territory</button>
+                        <div id="territoryDrawInfo" style="margin-top: 10px; display: none;">
+                            <p style="font-size: 12px; color: #666;">Use the drawing tools on the map to create a territory boundary.</p>
+                        </div>
+                    </div>
+
+                    <div class="control-panel" id="territoryAssignPanel" style="display: none;">
+                        <div class="control-title">📝 Territory Assignment</div>
+                        
+                        <div class="control-group">
+                            <div class="control-label">Territory Name</div>
+                            <input type="text" id="territoryName" placeholder="e.g., North Bangalore Zone">
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">Sales Officer</div>
+                            <input type="text" id="salesPerson" placeholder="Officer name">
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">Contact Number</div>
+                            <input type="text" id="salesContact" placeholder="Mobile number">
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">Monthly Target (₹)</div>
+                            <input type="number" id="monthlyTarget" placeholder="0">
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="territoryPOICount">0</div>
+                                <div class="stat-label">POIs in Territory</div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-success" onclick="saveTerritory()">💾 Save Territory</button>
+                        <button class="btn btn-danger" onclick="cancelTerritory()" style="margin-top: 10px;">❌ Cancel</button>
+                    </div>
+
+                    <div class="control-panel">
+                        <div class="control-title">📋 Created Territories</div>
+                        <div id="territoriesList">
+                            <div style="text-align: center; padding: 20px; color: #999; font-size: 13px;">
+                                No territories defined yet. Click "Draw New Territory" to start.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-panel">
+                        <button class="btn btn-warning" onclick="exportTerritories()">📥 Export Territories</button>
+                        <button class="btn btn-success" onclick="exportTerritoryPOIs()" style="margin-top: 10px;">📥 Export Territory POIs</button>
+                    </div>
+                </div>
+
+                <!-- Allocated Tab -->
+                <div class="tab-content" id="allocatedTab">
+                    <div class="control-panel">
+                        <div class="control-title">✅ Territory Allocation Status</div>
+                        
+                        <div class="control-group">
+                            <div class="control-label">Filter by Allocation</div>
+                            <select id="allocationFilter" onchange="filterAllocatedTerritories()">
+                                <option value="all">All POIs</option>
+                                <option value="allocated">Allocated Only</option>
+                                <option value="unallocated">Unallocated Only</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">Filter by Officer</div>
+                            <select id="officerFilter" onchange="filterAllocatedTerritories()">
+                                <option value="all">All Officers</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">Filter by Cluster</div>
+                            <select id="clusterFilter" onchange="filterAllocatedTerritories()">
+                                <option value="all">All Clusters</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="control-panel">
+                        <div class="control-title">📊 Allocation Summary</div>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="allocatedCount">0</div>
+                                <div class="stat-label">Allocated POIs</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="unallocatedCount">0</div>
+                                <div class="stat-label">Unallocated POIs</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalOfficers">0</div>
+                                <div class="stat-label">Active Officers</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="avgPOIsPerOfficer">0</div>
+                                <div class="stat-label">Avg POIs/Officer</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-panel">
+                        <div class="control-title">🎨 Territory Visualization</div>
+                        <button class="btn" onclick="toggleTerritoryColors()">🎨 Toggle Color View</button>
+                        <button class="btn btn-secondary" onclick="showHeatmap()" style="margin-top: 10px;">🔥 Show Heatmap</button>
+                    </div>
+
+                    <div id="allocationDetails"></div>
+                </div>
+            </div>
+
+            <div class="map-container">
+                <div id="map"></div>
+                
+                <!-- Map Legend -->
+                <div class="map-legend">
+                    <div class="legend-title">Map Legend</div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #667eea;"></div>
+                        <span>Plant Location</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #28a745;"></div>
+                        <span>Distributor</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffc107;"></div>
+                        <span>POI - High Potential</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #17a2b8;"></div>
+                        <span>POI - Medium Potential</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #6c757d;"></div>
+                        <span>POI - Low Potential</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Loading data...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+    <script src="app.js"></script>
+    <script src="territory_mgmt.js"></script>
+</body>
+</html>
