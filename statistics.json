@@ -1,0 +1,39 @@
+{
+  "total_pois": 27800,
+  "by_plant": {
+    "Harohalli": 19755,
+    "Kunigal": 8045
+  },
+  "by_category": {
+    "HoReCa": 12907,
+    "Retail": 9200,
+    "Institutional": 4009,
+    "Services": 1605,
+    "Entertainment": 79
+  },
+  "by_cluster": {
+    "Cluster1": 3384,
+    "Cluster10": 680,
+    "Cluster11": 1119,
+    "Cluster12": 1308,
+    "Cluster13": 689,
+    "Cluster14": 1597,
+    "Cluster2": 4040,
+    "Cluster3": 2328,
+    "Cluster4": 1197,
+    "Cluster5": 637,
+    "Cluster6": 465,
+    "Cluster7": 490,
+    "Cluster8": 1193,
+    "Cluster9": 628,
+    "NorthEast_Cluster1": 664,
+    "NorthEast_Cluster2": 664,
+    "Other_Cluster5": 1500,
+    "Other_Cluster6": 1499,
+    "Other_Cluster7": 1499,
+    "Other_Cluster8": 1500,
+    "SouthEast_Cluster3": 361,
+    "SouthEast_Cluster4": 358
+  },
+  "generated_at": "2025-10-26T01:32:58.961788"
+}
