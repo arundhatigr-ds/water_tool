@@ -1198,3 +1198,159 @@ window.onload = function() {
 };
 
 console.log('✅ Water Business Territory Management System loaded');
+// ============================================================
+// ENHANCED TERRITORY ALLOCATION FILTERS
+// ============================================================
+
+function handleOfficerChange() {
+    const selectedOfficer = document.getElementById('officerFilter').value;
+    const clusterFilter = document.getElementById('clusterFilter');
+    
+    if (selectedOfficer === 'all') {
+        populateAllClusters();
+    } else if (selectedOfficer === 'vacant') {
+        populateAllClusters();
+    } else {
+        populateClustersForOfficer(selectedOfficer);
+    }
+    
+    clusterFilter.value = 'all';
+    filterAllocatedTerritories();
+}
+
+function populateAllClusters() {
+    const clusterFilter = document.getElementById('clusterFilter');
+    const clusters = [...new Set(pois.map(p => p.cluster))].filter(Boolean).sort();
+    
+    clusterFilter.innerHTML = '<option value="all">All Clusters</option>';
+    clusters.forEach(cluster => {
+        clusterFilter.innerHTML += `<option value="${cluster}">${cluster}</option>`;
+    });
+}
+
+function populateClustersForOfficer(officer) {
+    const clusterFilter = document.getElementById('clusterFilter');
+    
+    const officerClusters = [...new Set(
+        pois.filter(p => p.sales_officer === officer).map(p => p.cluster)
+    )].filter(Boolean).sort();
+    
+    const allClusters = [...new Set(pois.map(p => p.cluster))].filter(Boolean).sort();
+    
+    clusterFilter.innerHTML = '<option value="all">All Clusters</option>';
+    
+    if (officerClusters.length > 0) {
+        officerClusters.forEach(cluster => {
+            const count = pois.filter(p => p.sales_officer === officer && p.cluster === cluster).length;
+            clusterFilter.innerHTML += `<option value="${cluster}">${cluster} (${count} POIs)</option>`;
+        });
+        
+        clusterFilter.innerHTML += '<option disabled>─────────────────</option>';
+    }
+    
+    const vacantClusters = allClusters.filter(c => !officerClusters.includes(c));
+    if (vacantClusters.length > 0) {
+        clusterFilter.innerHTML += '<option disabled>📍 Available Clusters:</option>';
+        vacantClusters.forEach(cluster => {
+            const count = pois.filter(p => p.cluster === cluster).length;
+            clusterFilter.innerHTML += `<option value="${cluster}" style="color: #999;">${cluster} (${count} POIs) ⭕</option>`;
+        });
+    }
+}
+
+function highlightFilteredPOIs(filtered) {
+    if (!poiMarkers) return;
+    
+    const filteredIds = new Set(filtered.map(p => `${p.latitude}-${p.longitude}`));
+    
+    poiMarkers.eachLayer(marker => {
+        const latLng = marker.getLatLng();
+        const markerId = `${latLng.lat}-${latLng.lng}`;
+        
+        if (filteredIds.has(markerId)) {
+            marker.setOpacity(1.0);
+            if (marker.setStyle) {
+                marker.setStyle({ fillOpacity: 0.8, weight: 2 });
+            }
+        } else {
+            marker.setOpacity(0.15);
+            if (marker.setStyle) {
+                marker.setStyle({ fillOpacity: 0.1, weight: 1 });
+            }
+        }
+    });
+    
+    const cluster = document.getElementById('clusterFilter').value;
+    if (cluster !== 'all' && filtered.length > 0) {
+        try {
+            const bounds = L.latLngBounds(filtered.map(p => [p.latitude, p.longitude]));
+            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13, animate: true });
+        } catch (e) {
+            console.warn('Could not zoom to bounds:', e);
+        }
+    }
+}
+
+function updateFilteredSummary(filtered) {
+    const allocated = filtered.filter(p => p.sales_officer && p.sales_officer !== 'Vacant' && p.sales_officer !== '');
+    const unallocated = filtered.filter(p => !p.sales_officer || p.sales_officer === 'Vacant' || p.sales_officer === '');
+    
+    const officers = [...new Set(allocated.map(p => p.sales_officer))].filter(Boolean);
+    const avgPOIs = officers.length > 0 ? Math.round(allocated.length / officers.length) : 0;
+    
+    document.getElementById('allocatedCount').textContent = formatNumber(allocated.length);
+    document.getElementById('unallocatedCount').textContent = formatNumber(unallocated.length);
+    document.getElementById('totalOfficers').textContent = formatNumber(officers.length);
+    document.getElementById('avgPOIsPerOfficer').textContent = formatNumber(avgPOIs);
+}
+
+function exportFilteredTerritoryData() {
+    const allocation = document.getElementById('allocationFilter').value;
+    const officer = document.getElementById('officerFilter').value;
+    const cluster = document.getElementById('clusterFilter').value;
+    
+    let filtered = pois.filter(poi => {
+        if (allocation === 'allocated') {
+            if (!poi.sales_officer || poi.sales_officer === 'Vacant' || poi.sales_officer === '') return false;
+        }
+        if (allocation === 'unallocated') {
+            if (poi.sales_officer && poi.sales_officer !== 'Vacant' && poi.sales_officer !== '') return false;
+        }
+        
+        if (officer !== 'all') {
+            if (officer === 'vacant') {
+                if (poi.sales_officer && poi.sales_officer !== 'Vacant' && poi.sales_officer !== '') return false;
+            } else {
+                if (poi.sales_officer !== officer) return false;
+            }
+        }
+        
+        if (cluster !== 'all' && cluster !== 'vacant_clusters') {
+            if (poi.cluster !== cluster) return false;
+        }
+        
+        return true;
+    });
+    
+    if (filtered.length === 0) {
+        alert('❌ No data to export with current filters!');
+        return;
+    }
+    
+    let csv = 'Name,Channel,Category,Type,Potential,Distance,Plant,Cluster,Officer,Phone,Address,Latitude,Longitude\n';
+    
+    filtered.forEach(poi => {
+        csv += `"${poi.name || ''}","${poi.channel || ''}","${poi.business_category || ''}","${poi.distributor_type || ''}","${poi.distributor_potential || ''}","${poi.distance_from_plant_km || ''}","${poi.plant || ''}","${poi.cluster || ''}","${poi.sales_officer || ''}","${poi.phone_number || ''}","${poi.address || ''}",${poi.latitude || 0},${poi.longitude || 0}\n`;
+    });
+    
+    const officerName = officer !== 'all' ? officer.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'all';
+    const clusterName = cluster !== 'all' ? cluster.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'all';
+    const date = new Date().toISOString().split('T')[0];
+    const filename = `territory_${officerName}_${clusterName}_${date}.csv`;
+    
+    downloadCSV(csv, filename);
+    
+    alert(`✅ Export Successful!\n\nExported: ${filtered.length} POIs\nOfficer: ${officer}\nCluster: ${cluster}\nFilename: ${filename}`);
+}
+
+console.log('✅ Enhanced Territory Filters loaded');
