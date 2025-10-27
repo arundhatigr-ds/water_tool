@@ -726,7 +726,7 @@
 
                         <div class="control-group">
                             <div class="control-label">Filter by Officer</div>
-                            <select id="officerFilter" onchange="filterAllocatedTerritories()">
+                            <select id="officerFilter" onchange="handleOfficerChange()">
                                 <option value="all">All Officers</option>
                             </select>
                         </div>
@@ -736,6 +736,16 @@
                             <select id="clusterFilter" onchange="filterAllocatedTerritories()">
                                 <option value="all">All Clusters</option>
                             </select>
+                            <div class="control-group" style="margin-top: 15px;">
+    <button onclick="exportFilteredTerritoryData()" 
+            style="width: 100%; padding: 12px; 
+                   background: linear-gradient(135deg, #28a745 0%, #20c997 100%); 
+                   color: white; border: none; border-radius: 8px; 
+                   font-weight: 600; cursor: pointer; font-size: 14px;">
+        📥 Export Filtered Data
+    </button>
+</div>
+                            
                         </div>
                     </div>
 
