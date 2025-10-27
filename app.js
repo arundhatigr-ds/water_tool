@@ -738,18 +738,32 @@ function filterDistributors() {
     updateDistributorsList(filtered);
 }
 
-function filterAllocatedTerritories() {
-    const allocation = document.getElementById('allocationFilter').value;
-    const officer = document.getElementById('officerFilter').value;
-    const cluster = document.getElementById('clusterFilter').value;
-    
-    let filtered = pois.filter(poi => {
-        if (allocation === 'allocated' && !poi.sales_officer) return false;
-        if (allocation === 'unallocated' && poi.sales_officer) return false;
-        if (officer !== 'all' && poi.sales_officer !== officer) return false;
-        if (cluster !== 'all' && poi.cluster !== cluster) return false;
+let filtered = pois.filter(poi => {
+        // Allocation filter
+        if (allocation === 'allocated') {
+            if (!poi.sales_officer || poi.sales_officer === 'Vacant' || poi.sales_officer === '') return false;
+        }
+        if (allocation === 'unallocated') {
+            if (poi.sales_officer && poi.sales_officer !== 'Vacant' && poi.sales_officer !== '') return false;
+        }
+        
+        // Officer filter
+        if (officer !== 'all') {
+            if (officer === 'vacant') {
+                if (poi.sales_officer && poi.sales_officer !== 'Vacant' && poi.sales_officer !== '') return false;
+            } else {
+                if (poi.sales_officer !== officer) return false;
+            }
+        }
+        
+        // Cluster filter
+        if (cluster !== 'all' && cluster !== 'vacant_clusters') {
+            if (poi.cluster !== cluster) return false;
+        }
+        
         return true;
     });
+
     
     updateAllocationDetails(filtered);
 }
@@ -1000,7 +1014,129 @@ function updateAllocationDetails(filtered = pois) {
     html += '</tbody></table></div>';
     document.getElementById('allocationDetails').innerHTML = html;
 }
+// ============================================================
+// COPY-PASTE THESE TWO FUNCTIONS AT LINE 1017
+// Insert after updateAllocationDetails() and before // UTILITY FUNCTIONS
+// ============================================================
 
+// ============================================================
+// TERRITORY FILTERING FUNCTIONS
+// ============================================================
+
+/**
+ * Main filter function - filters POIs and updates map
+ * This is called when any filter dropdown changes
+ */
+function filterAllocatedTerritories() {
+    const allocation = document.getElementById('allocationFilter').value;
+    const officer = document.getElementById('officerFilter').value;
+    const cluster = document.getElementById('clusterFilter').value;
+    
+    console.log(`Filtering - Allocation: ${allocation}, Officer: ${officer}, Cluster: ${cluster}`);
+    
+    // Filter POIs based on all criteria
+    let filtered = pois.filter(poi => {
+        // Allocation status filter
+        if (allocation === 'allocated') {
+            if (!poi.sales_officer || poi.sales_officer === 'Vacant' || poi.sales_officer === '') return false;
+        }
+        if (allocation === 'unallocated') {
+            if (poi.sales_officer && poi.sales_officer !== 'Vacant' && poi.sales_officer !== '') return false;
+        }
+        
+        // Officer filter
+        if (officer !== 'all') {
+            if (officer === 'vacant') {
+                // Show only unassigned POIs
+                if (poi.sales_officer && poi.sales_officer !== 'Vacant' && poi.sales_officer !== '') return false;
+            } else {
+                // Show only POIs assigned to this specific officer
+                if (poi.sales_officer !== officer) return false;
+            }
+        }
+        
+        // Cluster filter
+        if (cluster !== 'all' && cluster !== 'vacant_clusters') {
+            if (poi.cluster !== cluster) return false;
+        }
+        
+        return true;
+    });
+    
+    console.log(`✅ Filtered ${filtered.length} POIs out of ${pois.length} total`);
+    
+    // 🔥 THIS IS THE KEY LINE - Update map visibility!
+    updateMapWithFilteredPOIs(filtered);
+    
+    // Update table and summary stats
+    updateAllocationDetails(filtered);
+    updateFilteredSummary(filtered);
+}
+
+/**
+ * Update map to show ONLY filtered POIs
+ * THIS IS THE MISSING FUNCTION that fixes "all POIs showing"
+ */
+function updateMapWithFilteredPOIs(filtered) {
+    if (!map || !poiMarkers || poiMarkers.length === 0) {
+        console.warn('⚠️ Map or markers not ready yet');
+        return;
+    }
+    
+    console.log(`🗺️ Updating map: showing ${filtered.length} of ${pois.length} POIs`);
+    
+    // Create a Set of filtered POI IDs for fast O(1) lookup
+    const filteredIds = new Set();
+    filtered.forEach(poi => {
+        filteredIds.add(`${poi.latitude}-${poi.longitude}`);
+    });
+    
+    // Loop through ALL POI markers on the map
+    poiMarkers.forEach(marker => {
+        const latLng = marker.getLatLng();
+        const markerId = `${latLng.lat}-${latLng.lng}`;
+        
+        if (filteredIds.has(markerId)) {
+            // ✅ This marker matches the filter - SHOW IT
+            if (!map.hasLayer(marker)) {
+                marker.addTo(map);
+            }
+            // Make it fully visible
+            marker.setStyle({
+                fillOpacity: 0.8,
+                opacity: 1,
+                weight: 2
+            });
+        } else {
+            // ❌ This marker doesn't match the filter - HIDE IT
+            if (map.hasLayer(marker)) {
+                map.removeLayer(marker);
+            }
+        }
+    });
+    
+    // Auto-zoom to show the filtered POIs nicely
+    if (filtered.length > 0 && filtered.length < pois.length) {
+        try {
+            // Create bounds from filtered POI coordinates
+            const bounds = L.latLngBounds(filtered.map(p => [p.latitude, p.longitude]));
+            
+            // Zoom the map to fit these bounds
+            map.fitBounds(bounds, {
+                padding: [50, 50],    // Add padding around the edges
+                maxZoom: 14,          // Don't zoom in too close
+                animate: true,        // Smooth animation
+                duration: 0.5         // Animation duration in seconds
+            });
+        } catch (e) {
+            console.warn('Could not zoom to bounds:', e);
+        }
+    }
+}
+
+// ============================================================
+// END OF FUNCTIONS TO COPY-PASTE
+// ============================================================
 // ============================================================
 // UTILITY FUNCTIONS
 // ============================================================
